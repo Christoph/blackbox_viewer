@@ -31,6 +31,19 @@
             </button>
             <input style="height: 35px" class="btn btn-default" type="file" accept="*.json" change.delegate="fileSelected()" files.bind="file">
           </div>
+          <br>
+          <div  class="btn-group dropdown" aubs-dropdown="auto-close: 'Always'; on-toggle.call: toggled(state)">
+            <button disabled.bind="data_not_loaded" class="btn btn-default dropdown-toggle" aubs-dropdown-toggle>
+                X-Axis: ${selected_dim}
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-left">
+                <li repeat.for="dim of dimensions">
+                  <a click.delegate="selectDim(dim)">${dim}</a>
+                </li>
+            </ul>
+          </div>
+          <button disabled.bind="dim_not_selected" class="btn btn-success" click.delegate="visualize()">Visualize</button>
 
           <div style="width: 100%; height:500px">
               <parallel-coordinates-gauss
@@ -42,6 +55,7 @@
         <div class="col-md-8">
           <div class="col-md-6" style="width:100%; height:800px">
               <line-charts
+                  x_attribute.bind="selected_dim"
                   brushing.bind="brushing_lines"
                   redraw.bind="redraw_lines"
                   data.bind="data_lines"></line-chars>

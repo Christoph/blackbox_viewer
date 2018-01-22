@@ -5,6 +5,10 @@ import * as d3 from "d3"
 export class Gauss {
   file;
   data;
+  dimensions = [];
+  selected_dim = "";
+  dim_not_selected = true;
+  data_not_loaded = true;
 
   @observable brushing_parallel;
   redraw_parallel;
@@ -26,9 +30,9 @@ export class Gauss {
 
   toggled(open) {
       if (open) {
-          console.log('opened');
+          // console.log('opened');
       } else {
-          console.log('closed');
+          // console.log('closed');
       }
   }
 
@@ -41,6 +45,35 @@ export class Gauss {
       this.load()
     }
     reader.readAsText(file);
+  }
+
+  selectDim(dim) {
+    this.selected_dim = dim;
+    this.dim_not_selected = false;
+  }
+
+  visualize() {
+    this.data_parallel.length = 0
+    this.data_lines_original.length = 0
+
+    for (let i = 0; i < this.data.length; i++) {
+      let d = this.data[i]
+
+      this.data_parallel.push({
+        "id": i,
+        "highlight": 0,
+        "data": d.params
+      })
+
+      this.data_lines_original.push({
+        "id": i,
+        "highlight": 0,
+        "data": d.data
+      })
+    }
+
+    this.data_length = this.data_lines_original.length;
+    this.filterOutData([])
   }
 
   brushing_linesChanged() {
@@ -122,27 +155,12 @@ export class Gauss {
   load() {
     if (this.data.length > 0) {
       if ("params" in this.data[0] && "data" in this.data[0]) {
-        this.data_parallel.length = 0
-        this.data_lines_original.length = 0
+        // Get y values
+        this.dimensions = d3.keys(this.data[0]["data"][0]).filter((d) => {
+          return d
+        });
 
-        for (let i = 0; i < this.data.length; i++) {
-          let d = this.data[i]
-
-          this.data_parallel.push({
-            "id": i,
-            "highlight": 0,
-            "data": d.params
-          })
-
-          this.data_lines_original.push({
-            "id": i,
-            "highlight": 0,
-            "data": d.data
-          })
-        }
-
-        this.data_length = this.data_lines_original.length;
-        this.filterOutData([])
+        this.data_not_loaded = false;
       }
     }
   }

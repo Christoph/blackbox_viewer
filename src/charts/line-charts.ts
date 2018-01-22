@@ -207,7 +207,7 @@ export class LineCharts {
 
     // Get y values
     this.dimensions = d3.keys(this.data[0]["data"][0]).filter((d) => {
-      return d != "x"
+      return d != this.x_attribute
     });
 
     // Set height value
@@ -294,7 +294,7 @@ export class LineCharts {
           .style("text-anchor", "middle")
           .attr("y", this.lc_height + 26)
           .attr("x", this.lc_width / 2)
-          .text("x");
+          .text(this.x_attribute);
 
         // add the x Axis
         focus.append("g")
@@ -419,7 +419,7 @@ export class LineCharts {
 
   createGauss(dim) {
     let line_data = this.getGaussian(dim);
-    this.gauss_x.range(this.focus_x.get(dim).domain()).domain(d3.extent(line_data, d => d["x"]))
+    this.gauss_x.range(this.focus_x.get(dim).domain()).domain(d3.extent(line_data, d => d[this.x_attribute]))
 
     this.charts.get(dim).focus.selectAll("path.focusline").remove();
     let focus_line = this.charts.get(dim).focus.selectAll("path.focusline")
@@ -437,7 +437,7 @@ export class LineCharts {
     let line_data = this.getGaussian(dim);
 
     // Update x axis domain
-    this.gauss_x.range(this.focus_x.get(dim).domain()).domain(d3.extent(line_data, d => d["x"]))
+    this.gauss_x.range(this.focus_x.get(dim).domain()).domain(d3.extent(line_data, d => d[this.x_attribute]))
 
     // Update line
     this.charts.get(dim).focus.selectAll("path.focusline")
