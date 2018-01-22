@@ -3,12 +3,34 @@
     <require from="../charts/line-chart-gauss"></require>
     <require from="../charts/parallel-coordinates-gauss"></require>
 
-    <h2>Analyse Model Model</h2>
-    <span>Brush and link input parameters and output values.</span>
+    <h2>Analyse Black Box Models</h2>
+    <span>Through brushing and linking of input parameters and output values.</span>
     <hr>
     <div class="row">
         <div class="col-md-4">
-          <input type="file" accept="*.json" change.delegate="fileSelected()" files.bind="file">
+          <div class="btn-group">
+            <button style="height: 35px" class="btn btn-default" aubs-popover="title: Data Format;
+                                                        body:[{
+                                                          data: [{<br/>
+                                                            x: 0,<br/>
+                                                            y1: 1,<br/>
+                                                            y2: 3,<br/>
+                                                            ...<br/>
+                                                          }, {}, ...]<br/>
+                                                          params: {<br/>
+                                                            a: 1,<br/>
+                                                            b: 2,<br/>
+                                                            ...<br/>
+                                                          }
+                                                        }, {}, ...];
+                                                        position.bind: position;
+                                                        trigger.bind: trigger;
+                                                        on-toggle.call:toggled(open)">
+                <i class="fas fa-info-circle fa-lg"></i>
+            </button>
+            <input style="height: 35px" class="btn btn-default" type="file" accept="*.json" change.delegate="fileSelected()" files.bind="file">
+          </div>
+
 
           <div style="width: 100%; height:500px">
               <parallel-coordinates-gauss

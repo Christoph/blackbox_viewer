@@ -33,6 +33,17 @@ export class Gauss {
 
   current_filter = new Set();
 
+  position = 'right';
+  trigger = 'mouseover';
+
+  toggled(open) {
+      if (open) {
+          console.log('opened');
+      } else {
+          console.log('closed');
+      }
+  }
+
   fileSelected() {
     let reader = new FileReader();
     let file = this.file[0];
@@ -163,6 +174,7 @@ export class Gauss {
 
   load() {
     if (this.data.length > 0) {
+      console.log(this.data)
       if ("params" in this.data[0] && "data" in this.data[0]) {
         this.data_parallel.length = 0
         this.data_lines_original.length = 0
