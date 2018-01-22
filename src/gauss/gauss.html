@@ -1,10 +1,11 @@
 <template>
     <require from="./chart.css"></require>
     <require from="../charts/line-chart-gauss"></require>
+    <require from="../charts/line-charts"></require>
     <require from="../charts/parallel-coordinates-gauss"></require>
 
-    <h2>Analyse Black Box Models</h2>
-    <span>Through brushing and linking of input parameters and output values.</span>
+    <h2>Analyse Input-Output Models</h2>
+    <span>Brush and link input parameters and output values.</span>
     <hr>
     <div class="row">
         <div class="col-md-4">
@@ -31,7 +32,6 @@
             <input style="height: 35px" class="btn btn-default" type="file" accept="*.json" change.delegate="fileSelected()" files.bind="file">
           </div>
 
-
           <div style="width: 100%; height:500px">
               <parallel-coordinates-gauss
               brushing.bind="brushing_parallel"
@@ -40,49 +40,12 @@
           </div>
         </div>
         <div class="col-md-8">
-            <div class="row">
-                <div class="col-md-6" style="width:100%; height:300px">
-                    <line-chart-gauss
-                        brushing.bind="brushing_pop"
-                        redraw.bind="redraw_pop"
-                        x_attribute="x"
-                        y_attribute="pop"
-                        y_label="Population"
-                        data.bind="data_lines"></line-char-gauss>
-                </div>
-                <div class="col-md-6"style="width:100%; height:300px">
-                    <line-chart-gauss
-                        brushing.bind="brushing_sus"
-                        redraw.bind="redraw_sus"
-                        mo.bind="test"
-                        x_attribute="x"
-                        y_attribute="sus"
-                        y_label="Susceptibility"
-                        data.bind="data_lines"></line-chart-gauss>
-                                </div>
-                            </div>
-            <div class="row">
-                <div class="col-md-6"style="width:100%; height:300px">
-                    <line-chart-gauss
-                        brushing.bind="brushing_inf"
-                        redraw.bind="redraw_inf"
-                        mo.bind="test"
-                        x_attribute="x"
-                        y_attribute="inf"
-                        y_label="Infected"
-                        data.bind="data_lines"></line-chart-gauss>
-                                </div>
-                <div class="col-md-6"style="width:100%; height:300px">
-                    <line-chart-gauss
-                        brushing.bind="brushing_rec"
-                        redraw.bind="redraw_rec"
-                        mo.bind="test"
-                        x_attribute="x"
-                        y_attribute="rec"
-                        y_label="Recovered"
-                        data.bind="data_lines"></line-chart-gauss>
-                </div>
-            </div>
+          <div class="col-md-6" style="width:100%; height:800px">
+              <line-charts
+                  brushing.bind="brushing_lines"
+                  redraw.bind="redraw_lines"
+                  data.bind="data_lines"></line-chars>
+              </div>
         </div>
     </div>
 

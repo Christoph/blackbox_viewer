@@ -3,28 +3,16 @@ import * as d3 from "d3"
 
 @autoinject
 export class Gauss {
-  @observable brushing_pop;
-  @observable brushing_sus;
-  @observable brushing_inf;
-  @observable brushing_rec;
-  redraw_pop;
-  redraw_sus;
-  redraw_inf;
-  redraw_rec;
-
   file;
   data;
 
   @observable brushing_parallel;
   redraw_parallel;
 
+  @observable brushing_lines;
+  redraw_lines;
+
   inFilter = []
-  outFilterList = new Map([
-    ["pop", new Map()],
-    ["sus", new Map()],
-    ["inf", new Map()],
-    ["rec", new Map()]
-  ]);
 
   data_parallel = <any[]>[]
   data_lines = <any[]>[]
@@ -55,64 +43,23 @@ export class Gauss {
     reader.readAsText(file);
   }
 
-  brushing_popChanged() {
-    this.updateOutData(this.brushing_pop, "pop");
-    this.updateInData(this.brushing_pop);
-  }
-
-  brushing_susChanged() {
-    this.updateOutData(this.brushing_sus, "sus");
-    this.updateInData(this.brushing_sus);
-  }
-
-  brushing_recChanged() {
-    this.updateOutData(this.brushing_rec, "rec");
-    this.updateInData(this.brushing_rec);
-  }
-
-  brushing_infChanged() {
-    this.updateOutData(this.brushing_inf, "inf");
-    this.updateInData(this.brushing_inf);
+  brushing_linesChanged() {
+    this.updateOutData(this.brushing_lines);
+    this.updateInData(this.brushing_lines);
   }
 
   brushing_parallelChanged() {
     this.updateParallelData(this.brushing_parallel);
     this.filterOutData(this.brushing_parallel);
-    // this.redrawLinecharts();
   }
 
-  redrawLinecharts() {
-    this.redraw_pop = this.redraw_pop == 0 ? 1 : 0;
-    this.redraw_inf = this.redraw_inf == 0 ? 1 : 0;
-    this.redraw_rec = this.redraw_rec == 0 ? 1 : 0;
-    this.redraw_sus = this.redraw_sus == 0 ? 1 : 0;
-  }
-
-  private updateOutData(mapping, attribute) {
-    let average = new Map();
-
-    // Set current filter
-    this.outFilterList.set(attribute, mapping);
-
-    // Update average filter
-    mapping.forEach((v, k) => {
-      let temp = 0;
-
-      this.outFilterList.forEach((iv, ik) => {
-        if (iv.size > 0) temp = temp + iv.get(k);
-      })
-
-      temp = temp / this.outFilterList.size;
-
-      average.set(k, temp)
-    })
-
+  private updateOutData(mapping) {
     // Set highlight colors
     this.data_lines.forEach(x => {
       x["highlight"] = mapping.get(x["id"])
     })
 
-    this.redrawLinecharts();
+    this.redraw_lines = this.redraw_lines == 0 ? 1 : 0;
   }
 
   private updateInData(mapping) {
@@ -174,7 +121,6 @@ export class Gauss {
 
   load() {
     if (this.data.length > 0) {
-      console.log(this.data)
       if ("params" in this.data[0] && "data" in this.data[0]) {
         this.data_parallel.length = 0
         this.data_lines_original.length = 0
