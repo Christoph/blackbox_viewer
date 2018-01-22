@@ -427,7 +427,7 @@ export class LineCharts {
 
   createGauss(dim) {
     let line_data = this.getGaussian(dim);
-    this.gauss_x.range(this.focus_x.get(dim).domain()).domain(d3.extent(line_data, d => d[this.x_attribute]))
+    this.gauss_x.range(this.focus_x.get(dim).domain()).domain(d3.extent(line_data, d => d["x"]))
 
     this.charts.get(dim).focus.selectAll("path.focusline").remove();
     let focus_line = this.charts.get(dim).focus.selectAll("path.focusline")
@@ -437,7 +437,7 @@ export class LineCharts {
     focus_line.enter()
       .append("path")
       .attr("class", "focusline")
-      .attr("d", (d) => this.focusline.get(dim)(d))
+      .attr("d", (d) => {this.focusline.get(dim)(d)})
       .moveToFront();
   }
 
@@ -445,7 +445,7 @@ export class LineCharts {
     let line_data = this.getGaussian(dim);
 
     // Update x axis domain
-    this.gauss_x.range(this.focus_x.get(dim).domain()).domain(d3.extent(line_data, d => d[this.x_attribute]))
+    this.gauss_x.range(this.focus_x.get(dim).domain()).domain(d3.extent(line_data, d => d["x"]))
 
     // Update line
     this.charts.get(dim).focus.selectAll("path.focusline")
