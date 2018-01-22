@@ -9,6 +9,7 @@ export class LineCharts {
   @bindable x_attribute = "x";
   @bindable x_label = "days";
   @bindable redraw = 0;
+  @bindable reset = 0;
 
   // Two-Way
   @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
@@ -98,6 +99,13 @@ export class LineCharts {
       this.dimensions.forEach((dim) => {
         this.updateHighlight(dim);
       })
+    }
+  }
+
+  resetChanged() {
+    if(this.initialized) {
+      this.svg.remove()
+      this.initialized = false;
     }
   }
 

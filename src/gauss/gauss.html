@@ -49,6 +49,7 @@
               <parallel-coordinates-gauss
               brushing.bind="brushing_parallel"
               redraw.bind="redraw_parallel"
+              reset.bind="resetChart"
               data.bind="data_parallel"></parallel-coordinates-gauss>
           </div>
         </div>
@@ -58,6 +59,7 @@
                   x_attribute.bind="selected_dim"
                   brushing.bind="brushing_lines"
                   redraw.bind="redraw_lines"
+                  reset.bind="resetChart"
                   data.bind="data_lines"></line-chars>
               </div>
         </div>

@@ -16,6 +16,8 @@ export class Gauss {
   @observable brushing_lines;
   redraw_lines;
 
+  resetChart;
+
   inFilter = []
 
   data_parallel = <any[]>[]
@@ -53,6 +55,8 @@ export class Gauss {
   }
 
   visualize() {
+    this.resetChart = this.resetChart == 0 ? 1 : 0;
+
     this.data_parallel.length = 0
     this.data_lines_original.length = 0
 

@@ -8,6 +8,7 @@ export class parallelCoordinatesGauss {
   // One-Way
   @bindable margin = { top: 60, right: 20, bottom: 30, left: 40 };
   @bindable redraw = 0;
+  @bindable reset = 0;
 
   // Two-Way
   @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
@@ -19,9 +20,11 @@ export class parallelCoordinatesGauss {
   // Aurelia variables
   private element;
   private subscription;
+  private initialized = false;
 
   // D3 variables
   private svg;
+  private chart;
   private x = {};
   private y;
   private dimensions = <any>[];
@@ -54,20 +57,25 @@ export class parallelCoordinatesGauss {
 
     this.width = this.x_size - this.margin.left - this.margin.right;
     this.height = this.y_size - this.margin.top - this.margin.bottom;
-
-    // Draw the graph
-    this.initChart()
-    this.updateChart();
   }
 
   // Update the chart if the data changes
   dataMutated(splices) {
+    if(!this.initialized) this.initChart()
     this.updateChart();
   }
 
   redrawChanged() {
     if (this.data.length > 1) {
       this.updateHighlight();
+    }
+  }
+
+  resetChanged() {
+    if(this.initialized) {
+      this.svg.remove()
+      this.dataMutated("")
+      this.initialized = false;
     }
   }
 
@@ -127,6 +135,8 @@ export class parallelCoordinatesGauss {
       .append("svg")
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom)
+
+    this.chart = this.svg
       .append("g")
       .attr("transform",
       "translate(" + this.margin.left + "," + this.margin.top + ")");
@@ -138,6 +148,8 @@ export class parallelCoordinatesGauss {
     // Basic initialization
     this.line = d3.line()
       .curve(d3.curveMonotoneY);
+
+    this.initialized = true;
   }
 
   updateHighlight() {
@@ -177,7 +189,7 @@ export class parallelCoordinatesGauss {
     this.y.domain(this.dimensions);
 
     // Draw lines
-    this.background = this.svg.append("g")
+    this.background = this.chart.append("g")
       .selectAll("path")
       .data(this.data)
       .enter().append("path")
@@ -204,7 +216,7 @@ export class parallelCoordinatesGauss {
     let getBrushing = this.getBrushing;
 
     // Create drawing area
-    let g = this.svg.selectAll(".dimension")
+    let g = this.chart.selectAll(".dimension")
       .data(this.dimensions)
       .enter().append("g")
       .attr("class", "dimension")
