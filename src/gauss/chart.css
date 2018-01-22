@@ -1,0 +1,68 @@
+.background path {
+  fill: none;
+  stroke: #ddd;
+  shape-rendering: crispEdges;
+}
+
+.foreground path {
+  fill: none;
+  stroke: steelblue;
+}
+
+.brush .extent {
+  fill-opacity: .3;
+  stroke: #fff;
+  shape-rendering: crispEdges;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.axis text {
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+  shape-rendering: crispEdges;
+}
+
+.focusline {
+  fill: none;
+  stroke: black;
+  stroke-width: 1px;
+  shape-rendering: crispEdges;
+}
+
+.line.highlight {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+  shape-rendering: crispEdges;
+}
+
+.line.background {
+  fill: none;
+  stroke: #ddd;
+  stroke-width: 2px;
+  opacity: 0.5;
+  shape-rendering: crispEdges;
+}
+
+.focus_element {
+  fill: steelblue;
+  opacity: 0.1;
+}
+
+rect.bar {
+  fill: steelblue;
+  outline-width: thin;
+  outline-style: solid;
+  outline-color: #c7c7c7;
+}

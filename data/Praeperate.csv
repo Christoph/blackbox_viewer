@@ -1,0 +1,6 @@
+"Produktname","Wirkstoffname","Initialdosis","Abgabeschema in Wochen","Verabrechungsdosis in mg (Remicade pro kg Koerpergewicht)","Abgaben in den ersten 52 Behandlungdswochen","Jahres-Fabriksabgabepreis","Jahres-Kassenkaufpreis"
+"HUMIRA","Adalimumab","keine","",2.40,26,11765,12544.35
+"ENBREL","Etanercept","keine","",1.50,52,12351.3,13153.4
+"REMICADE","Infliximab","ja","0,2,6",8.5,32,15270.08,16128.53333
+"CIMZIA","Certolizumab pegol","ja", "0,2,4",2.200,29,11078,11867.525
+"COSENTYX","Secukinumab","ja","0,1,2,3",4.150,15,7838.4,8514
