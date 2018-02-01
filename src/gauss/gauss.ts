@@ -71,13 +71,13 @@ export class Gauss {
 
       this.data_parallel.push({
         "id": i,
-        "highlight": 0,
+        "highlight": 1,
         "data": d.params
       })
 
       this.data_lines_original.push({
         "id": i,
-        "highlight": 0,
+        "highlight": 1,
         "data": d.data
       })
     }
