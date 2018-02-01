@@ -1,5 +1,6 @@
 import { autoinject, observable } from 'aurelia-framework';
 import * as d3 from "d3"
+import {exampleData} from "../resources/example-data"
 
 @autoinject
 export class Gauss {
@@ -50,12 +51,8 @@ export class Gauss {
   }
 
   loadExample() {
-    fetch("../../data.json").then(r => r.json())
-      .then(data => {
-        this.data = data
-        this.load()
-      })
-      .catch(e => console.log("Error"))
+    this.data = exampleData.getExampleData()
+    this.load()
   }
 
   selectDim(dim) {
