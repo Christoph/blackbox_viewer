@@ -49,6 +49,15 @@ export class Gauss {
     reader.readAsText(file);
   }
 
+  loadExample() {
+    fetch("../../data.json").then(r => r.json())
+      .then(data => {
+        this.data = data
+        this.load()
+      })
+      .catch(e => console.log("Error"))
+  }
+
   selectDim(dim) {
     this.selected_dim = dim;
     this.dim_not_selected = false;
@@ -163,6 +172,9 @@ export class Gauss {
         this.dimensions = d3.keys(this.data[0]["data"][0]).filter((d) => {
           return d
         });
+
+        this.selected_dim = this.dimensions[0];
+        this.dim_not_selected = false;
 
         this.data_not_loaded = false;
       }

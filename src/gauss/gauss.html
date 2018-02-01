@@ -30,6 +30,13 @@
                 <i class="fas fa-info-circle fa-lg"></i>
             </button>
             <input style="height: 35px" class="btn btn-default" type="file" accept="*.json" change.delegate="fileSelected()" files.bind="file">
+            <button click.delegate="loadExample()" style="height: 35px" class="btn btn-default" aubs-popover="title: Load Example Dataset;
+                                                        body: SIR - Model;
+                                                        position.bind: position;
+                                                        trigger.bind: trigger;
+                                                        on-toggle.call:toggled(open)">
+                <i class="fas fa-database fa-lg"></i>
+            </button>
           </div>
           <br>
           <div  class="btn-group dropdown" aubs-dropdown="auto-close: 'Always'; on-toggle.call: toggled(state)">
