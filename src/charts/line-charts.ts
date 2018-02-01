@@ -43,6 +43,9 @@ export class LineCharts {
   private brush;
   private center = 1.0;
   private weight = 1.0;
+  private selected_time;
+  private bins;
+  private x_values;
 
   // set the dimensions and margins of the graph
   private width;
@@ -257,12 +260,13 @@ export class LineCharts {
           self.center = self.y.get(dim).invert(d3.mouse(this)[1]);
           self.weight = d3.mouse(this)[0];
           self.createGauss(dim);
+          self.updateGauss(dim);
 
           let new_filter = new Map()
           self.data.forEach(d => {
             new_filter.set(
               d["id"],
-              self.gradientColor(self.gaussian(self.gauss_y.get(dim).invert(d.data[d.data.length - 1][dim]), self.gauss_y.get(dim).invert(self.center), self.gauss_sigma(self.weight)))
+              self.gradientColor(self.gaussian(self.gauss_y.get(dim).invert(d.data[self.selected_time][dim]), self.gauss_y.get(dim).invert(self.center), self.gauss_sigma(self.weight)))
             )
           })
 
@@ -280,7 +284,7 @@ export class LineCharts {
               self.data.forEach(d => {
                 new_filter.set(
                   d["id"],
-                  self.gradientColor(self.gaussian(self.gauss_y.get(dim).invert(d.data[d.data.length - 1][dim]), self.gauss_y.get(dim).invert(self.center), self.gauss_sigma(self.weight)))
+                  self.gradientColor(self.gaussian(self.gauss_y.get(dim).invert(d.data[self.selected_time][dim]), self.gauss_y.get(dim).invert(self.center), self.gauss_sigma(self.weight)))
                 )
               })
 
@@ -303,6 +307,51 @@ export class LineCharts {
           .attr("y", this.lc_height + 26)
           .attr("x", this.lc_width / 2)
           .text(this.x_attribute);
+
+        let drag = d3.drag()
+          .on("start", function() { d3.select(this).classed('active',true); })
+          .on("drag", function(d) {
+            if(d3.event.x >= 0 && d3.event.x <= self.lc_width) {
+              d3.select(this).select("line")
+                .raise()
+                .attr("x1", d3.event.x)
+                .attr("x2", d3.event.x)
+
+              d3.select(this).select("circle")
+                .raise()
+                .attr("cx", d3.event.x)
+              }
+
+              let closest = self.x_values.reduce(function(prev, curr) {
+                return (Math.abs(curr - self.x.invert(d3.event.x)) < Math.abs(prev - self.x.invert(d3.event.x)) ? curr : prev);
+              });
+
+              self.selected_time = closest
+
+              self.updateBars(dim);
+          })
+          .on('end', function() { d3.select(this).classed('active',false); });
+
+        // Add time selection line
+        let selector = linechart
+          .append("g")
+          .attr("class", "time-selector")
+          .attr("width", this.lc_width)
+          .attr("height", this.lc_width)
+          .call(drag)
+
+        selector.append("line")
+          .attr("stroke", "black")
+          .attr("x1", this.lc_width)
+          .attr("y1", 0)
+          .attr("x2", this.lc_width)
+          .attr("y2", this.lc_height);
+
+        selector.append("circle")
+          .attr("fill", "black")
+          .attr("cx", this.lc_width)
+          .attr("cy", 0)
+          .attr("r", 10)
 
         // add the x Axis
         focus.append("g")
@@ -399,6 +448,63 @@ export class LineCharts {
     this.initialized = true;
   }
 
+  updateBars = (dim) => {
+    let y_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[dim]))
+    let y_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[dim]))
+
+    let focus_data = <any>[];
+    this.data.forEach((d: any[]) => {
+      focus_data.push(d["data"][this.selected_time][dim])
+    })
+
+    this.bins = d3.histogram()
+      .domain(this.y.get(dim).domain())
+      .thresholds(d3.range(y_min, y_max, (y_max - y_min) / 20))
+      (focus_data);
+
+    this.focus_x.get(dim).domain([0, d3.max(this.bins, (d: any[]) => d.length)]);
+
+    this.charts.get(dim).focus.selectAll(".xAxis")
+      .call(d3.axisBottom(this.focus_x.get(dim)).ticks(2));
+
+    this.charts.get(dim).focus.selectAll(".bar").remove();
+    let focus_chart = this.charts.get(dim).focus.selectAll("rect.bars")
+      .data(this.bins)
+
+    // Remove bars
+    focus_chart.exit().remove();
+
+    // Add bars
+    focus_chart.enter().append("rect")
+      .attr("class", "bar")
+      .attr("transform", (d) => {
+        return "translate(0," + this.y.get(dim)(d.x1) + ")";
+      })
+      .attr("width", (d) => {
+        return this.focus_x.get(dim)(d.length); })
+      .attr("height", (d) => {
+        return this.y.get(dim)(d.x0) - this.y.get(dim)(d.x1) - 1;
+      })
+      .moveToBack();
+
+      if(this.filters.get(dim).size > 0) {
+        this.updateGauss(dim);
+
+        let new_filter = new Map()
+
+        this.data.forEach(d => {
+          new_filter.set(
+            d["id"],
+            this.gradientColor(this.gaussian(this.gauss_y.get(dim).invert(d.data[this.selected_time][dim]), this.gauss_y.get(dim).invert(this.center), this.gauss_sigma(this.weight)))
+          )
+        })
+
+        this.resolve_brushing(dim, new_filter);
+
+        this.updateHighlight(dim)
+      }
+  }
+
   updateHighlight(dim) {
     let self = this;
 
@@ -412,7 +518,7 @@ export class LineCharts {
         let opacity = 0;
 
         self.data.forEach((d: any[]) => {
-          let value = d["data"][d["data"].length - 1][dim];
+          let value = d["data"][self.selected_time][dim];
 
           if(value > b.x0 && value < b.x1) {
             opacity += d["highlight"]
@@ -460,24 +566,30 @@ export class LineCharts {
     let x_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[this.x_attribute]))
     this.x.domain([x_min, x_max]);
 
+    this.x_values = this.data[0]["data"].map((d) => {
+      return d[this.x_attribute]
+    })
+
     this.dimensions.map((dim) => {
       let y_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[dim]))
       let y_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[dim]))
 
+    this.selected_time = x_max;
+
       let focus_data = <any>[];
       this.data.forEach((d: any[]) => {
-        focus_data.push(d["data"][d["data"].length - 1][dim])
+        focus_data.push(d["data"][this.selected_time][dim])
       })
 
       this.y.get(dim).domain([y_min, y_max]);
       this.gauss_y.get(dim).range(this.y.get(dim).domain())
 
-      let bins = d3.histogram()
+      this.bins = d3.histogram()
         .domain(this.y.get(dim).domain())
         .thresholds(d3.range(y_min, y_max, (y_max - y_min) / 20))
         (focus_data);
 
-      this.focus_x.get(dim).domain([0, d3.max(bins, (d: any[]) => d.length)]);
+      this.focus_x.get(dim).domain([0, d3.max(this.bins, (d: any[]) => d.length)]);
 
       // Select chart
       this.charts.get(dim).linechart.selectAll("path.line").remove();
@@ -486,7 +598,7 @@ export class LineCharts {
 
       this.charts.get(dim).focus.selectAll(".bar").remove();
       let focus_chart = this.charts.get(dim).focus.selectAll("rect.bars")
-        .data(bins)
+        .data(this.bins)
 
       // Update axis
       this.charts.get(dim).linechart.selectAll(".xAxis")
