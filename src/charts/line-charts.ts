@@ -500,9 +500,9 @@ export class LineCharts {
         })
 
         this.resolve_brushing(dim, new_filter);
-
-        this.updateHighlight(dim)
       }
+
+      this.updateHighlight(dim)
   }
 
   updateHighlight(dim) {
