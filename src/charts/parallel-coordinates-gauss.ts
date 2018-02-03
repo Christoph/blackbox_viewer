@@ -9,6 +9,7 @@ export class parallelCoordinatesGauss {
   @bindable margin = { top: 60, right: 20, bottom: 30, left: 40 };
   @bindable redraw = 0;
   @bindable reset = 0;
+  @bindable mode = "Opacity";
 
   // Two-Way
   @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
@@ -31,6 +32,8 @@ export class parallelCoordinatesGauss {
   private line;
   private background;
   private foreground;
+  private color_viridis;
+  private color_plasma;
 
   // set the dimensions and margins of the graph
   private x_size = 500;
@@ -145,6 +148,11 @@ export class parallelCoordinatesGauss {
     this.y = d3.scalePoint()
       .range([0, this.height]);
 
+    this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
+      .domain([0, 1])
+    this.color_plasma = d3.scaleSequential(d3.interpolatePlasma)
+      .domain([0, 1])
+
     // Basic initialization
     this.line = d3.line()
       .curve(d3.curveMonotoneY);
@@ -153,10 +161,26 @@ export class parallelCoordinatesGauss {
   }
 
   updateHighlight() {
-    this.svg.selectAll(".line")
-      .attr("opacity", function(d) {
-        return d["highlight"]
-      })
+    let self = this;
+
+    if(this.mode == "Opacity") {
+      this.svg.selectAll(".line")
+        .attr("opacity", function(d) {
+          return d["highlight"]
+        })
+    }
+    else if(this.mode = "Color-Viridis") {
+      this.svg.selectAll(".line")
+        .style("stroke", function(d) {
+          return self.color_viridis(d["highlight"])
+        })
+    }
+    else if(this.mode = "Color-Plasma") {
+      this.svg.selectAll(".line")
+        .style("stroke", function(d) {
+          return self.color_plasma(d["highlight"])
+        })
+    }
   }
 
   updateChart() {
@@ -194,14 +218,14 @@ export class parallelCoordinatesGauss {
       .data(this.data)
       .enter().append("path")
       .attr("class", "line")
-      .classed("highlight", function(this, d) {
-        if (d["highlight"] == 1) { return true; }
-        else { return false; }
-      })
-      .classed("background", function(this, d) {
-        if (d["highlight"] == 2) { return true; }
-        else { return false; }
-      })
+      // .classed("highlight", function(this, d) {
+      //   if (d["highlight"] == 1) { return true; }
+      //   else { return false; }
+      // })
+      // .classed("background", function(this, d) {
+      //   if (d["highlight"] == 2) { return true; }
+      //   else { return false; }
+      // })
       .attr("d", (d) => { return this.path(d["data"]) })
       // .on("click", (d) => {
       //   this.selected = d["id"]

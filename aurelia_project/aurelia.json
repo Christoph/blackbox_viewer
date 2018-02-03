@@ -195,6 +195,24 @@
               "deps": ["d3"]
           },
           {
+              "name": "d3-color",
+              "path": "../node_modules/d3-color/build",
+              "main": "d3-color.min",
+              "deps": ["d3"]
+          },
+          {
+              "name": "d3-interpolate",
+              "path": "../node_modules/d3-interpolate/build",
+              "main": "d3-interpolate.min",
+              "deps": ["d3"]
+          },
+          {
+              "name": "d3-scale-chromatic",
+              "path": "../node_modules/d3-scale-chromatic/dist",
+              "main": "d3-scale-chromatic.min",
+              "deps": ["d3"]
+          },
+          {
               "name": "d3-random",
               "path": "../node_modules/d3-random/build",
               "main": "d3-random.min",

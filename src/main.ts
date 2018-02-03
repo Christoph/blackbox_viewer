@@ -7,6 +7,9 @@ export function configure(aurelia: Aurelia) {
     .plugin("aurelia-computed")
     .plugin("d3-extended")
     .plugin("d3-random")
+    .plugin("d3-color")
+    .plugin("d3-interpolate")
+    .plugin("d3-scale-chromatic")
     .plugin("aurelia-bootstrap")
     .feature('resources');
 

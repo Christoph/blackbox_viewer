@@ -17,6 +17,7 @@
     "d3": "^4.10.0",
     "d3-extended": "^1.2.10",
     "d3-random": "^1.1.0",
+    "d3-scale-chromatic": "^1.2.0",
     "ion-rangeslider": "^2.2.0",
     "jquery": "^3.2.1",
     "lobos": "^0.9.24",

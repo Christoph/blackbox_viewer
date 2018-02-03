@@ -10,6 +10,7 @@ export class LineCharts {
   @bindable x_label = "days";
   @bindable redraw = 0;
   @bindable reset = 0;
+  @bindable mode = "Opacity";
 
   // Two-Way
   @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
@@ -46,6 +47,8 @@ export class LineCharts {
   private selected_time;
   private bins;
   private x_values;
+  private color_viridis;
+  private color_plasma;
 
   // set the dimensions and margins of the graph
   private width;
@@ -400,6 +403,11 @@ export class LineCharts {
         this.gradientColor = d3.scaleLinear()
           .range([0, 1])
 
+        this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
+          .domain([0, 1])
+        this.color_plasma = d3.scaleSequential(d3.interpolatePlasma)
+          .domain([0, 1])
+
         // for each chart
         let y = d3.scaleLinear()
           .range([this.lc_height, 0]);
@@ -508,27 +516,75 @@ export class LineCharts {
   updateHighlight(dim) {
     let self = this;
 
-    this.charts.get(dim).linechart.selectAll("path.line")
-      .attr("opacity", function(d) {
-        return d["highlight"]
-      })
-
-    this.charts.get(dim).focus.selectAll("rect.bar")
-      .attr("opacity", function(b) {
-        let opacity = 0;
-
-        self.data.forEach((d: any[]) => {
-          let value = d["data"][self.selected_time][dim];
-
-          if(value > b.x0 && value < b.x1) {
-            opacity += d["highlight"]
-          }
+    if(this.mode == "Opacity") {
+      this.charts.get(dim).linechart.selectAll("path.line")
+        .attr("opacity", function(d) {
+          return d["highlight"]
         })
 
-        if(b.length < 1) return 0;
+      this.charts.get(dim).focus.selectAll("rect.bar")
+        .attr("opacity", function(b) {
+          let opacity = 0;
 
-        return opacity / b.length
-      })
+          self.data.forEach((d: any[]) => {
+            let value = d["data"][self.selected_time][dim];
+
+            if(value > b.x0 && value < b.x1) {
+              opacity += d["highlight"]
+            }
+          })
+
+          if(b.length < 1) return 0;
+
+          return opacity / b.length
+        })
+    }
+    else if(this.mode = "Color-Viridis") {
+      this.charts.get(dim).linechart.selectAll("path.line")
+        .style("stroke", function(d) {
+          return self.color_viridis(d["highlight"])
+        })
+
+      this.charts.get(dim).focus.selectAll("rect.bar")
+        .style("fill", function(b) {
+          let opacity = 0;
+
+          self.data.forEach((d: any[]) => {
+            let value = d["data"][self.selected_time][dim];
+
+            if(value > b.x0 && value < b.x1) {
+              opacity += d["highlight"]
+            }
+          })
+
+          if(b.length < 1) return 0;
+
+          return self.color_viridis(opacity / b.length)
+        })
+    }
+    else if(this.mode = "Color-Plasma") {
+      this.charts.get(dim).linechart.selectAll("path.line")
+        .style("stroke", function(d) {
+          return self.color_plasma(d["highlight"])
+        })
+
+      this.charts.get(dim).focus.selectAll("rect.bar")
+        .style("fill", function(b) {
+          let opacity = 0;
+
+          self.data.forEach((d: any[]) => {
+            let value = d["data"][self.selected_time][dim];
+
+            if(value > b.x0 && value < b.x1) {
+              opacity += d["highlight"]
+            }
+          })
+
+          if(b.length < 1) return 0;
+
+          return self.color_plasma(opacity / b.length)
+        })
+    }
   }
 
   createGauss(dim) {
