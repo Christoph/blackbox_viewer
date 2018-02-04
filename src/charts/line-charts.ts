@@ -525,18 +525,20 @@ export class LineCharts {
       this.charts.get(dim).focus.selectAll("rect.bar")
         .attr("opacity", function(b) {
           let opacity = 0;
+          let counter = 0;
 
           self.data.forEach((d: any[]) => {
             let value = d["data"][self.selected_time][dim];
 
             if(value >= b.x0 && value <= b.x1) {
+              counter++;
               opacity += d["highlight"]
             }
           })
 
           if(b.length < 1) return 0;
 
-          return opacity / b.length
+          return opacity / counter
         })
     }
     else if(this.mode = "Color-Viridis") {
@@ -548,18 +550,20 @@ export class LineCharts {
       this.charts.get(dim).focus.selectAll("rect.bar")
         .style("fill", function(b) {
           let opacity = 0;
+          let counter = 0;
 
           self.data.forEach((d: any[]) => {
             let value = d["data"][self.selected_time][dim];
 
             if(value >= b.x0 && value <= b.x1) {
+              counter++;
               opacity += d["highlight"]
             }
           })
 
           if(b.length < 1) return 0;
 
-          return self.color_viridis(opacity / b.length)
+          return self.color_viridis(opacity / counter)
         })
     }
     else if(this.mode = "Color-Plasma") {
@@ -571,18 +575,20 @@ export class LineCharts {
       this.charts.get(dim).focus.selectAll("rect.bar")
         .style("fill", function(b) {
           let opacity = 0;
+          let counter = 0;
 
           self.data.forEach((d: any[]) => {
             let value = d["data"][self.selected_time][dim];
 
             if(value >= b.x0 && value <= b.x1) {
               opacity += d["highlight"]
+              counter++;
             }
           })
 
           if(b.length < 1) return 0;
 
-          return self.color_plasma(opacity / b.length)
+          return self.color_plasma(opacity / counter)
         })
     }
   }
