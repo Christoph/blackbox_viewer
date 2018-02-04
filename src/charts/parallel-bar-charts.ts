@@ -206,8 +206,6 @@ export class parallelBarCharts {
         }
     }
 
-
-
     // else if(this.mode = "Color-Plasma") {
     //   this.svg.selectAll(".bar-parallel")
     //     .style("fill", function(d) {
@@ -278,7 +276,7 @@ export class parallelBarCharts {
 
         g.append("g")
           .attr("class", "y-axis")
-          .call(d3.axisLeft(self.y[dim]).ticks(6));
+          .call(d3.axisLeft(self.y[dim]).ticks(4));
 
         // Add titles for the axis
         g.append("text")
@@ -293,11 +291,14 @@ export class parallelBarCharts {
       bar_chart.enter().append("rect")
         .attr("class", "bar-parallel")
         .attr("transform", (d) => {
-          return "translate(" + (this.x[dim](d.x1) + 1) + ", " + (this.chart_height - this.y[dim](d.length)) + ")";
+          return "translate(" + (this.x[dim](d.x1) + 1) + ", " + (this.y[dim](d.length)) + ")";
         })
         .attr("x", 1)
         .attr("height", (d) => {
-          return this.y[dim](d.length); })
+          if(dim == "gamma") {
+            console.log(d, this.y[dim](d.length))
+          }
+          return this.chart_height - this.y[dim](d.length); })
         .attr("width", (d) => {
           return this.x[dim](d.x0) - this.x[dim](d.x1) - 1;
         })
@@ -306,56 +307,6 @@ export class parallelBarCharts {
 
       margin_iterator++;
     });
-
-    // // Create drawing area
-    // let g = this.chart.selectAll(".dimension")
-    //   .data(this.dimensions)
-    //   .enter().append("g")
-    //   .attr("class", "dimension")
-    //   .attr("width", this.width)
-    //   .attr("height", this.chart_height)
-    //   .attr("transform", (d, i) => {
-    //     return"translate(" + this.margin.left + ", " + (this.margin.top + (this.chart_height + this.margin.middle) * (i)) + ")";
-    //   });
-
-
-    //
-    // // Add bars
-    // g.append("g")
-    //   .attr("class", "bars")
-    //   .each(function(this, d) {
-    //     d3.select(this).selectAll(".bar")
-    //     .data(this.bins[d])
-    //     .enter().append("g")
-    //       .attr("class", "bar")
-    //       .attr("transform", function(b) {
-    //         console.log(b)
-    //         // return "translate(" + x(b.x0) + "," + y(b.length) + ")";
-    //         return "asd"
-    //       });
-    //
-    //   });
-
-
-    // this.dimensions.map((dim) => {
-    //   let bar_chart = this.charts.get(dim).selectAll("rect.bars")
-    //     .data(this.bins)
-    // })
-
-    // let bars = g.append("g")
-    //   .attr("class", "rect.bars")
-    //   .attr("transform", function(d) {
-    //     return "translate(" + self.x[d](self.bins[d][0].x0) + "," + self.y[d](self.bins[d][0].length) + ")";
-    //   });
-    //
-    //
-    // bars.append("rect")
-    //   .attr("class", "bars")
-    //   .attr("x", 1)
-    //   .attr("width", (d) => {
-    //     self.x[d](self.bins[d][0].x1) - self.x[d](self.bins[d][0].x0) - 1
-    //   })
-    //   .attr("height", function(d) { return self.chart_height - self.y[d](self.bins[d][0].length); });
 
     // Add and store a brush for each axis.
     // g.append("g")
