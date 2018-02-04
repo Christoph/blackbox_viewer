@@ -296,7 +296,6 @@ export class parallelBarCharts {
         .attr("x", 1)
         .attr("height", (d) => {
           if(dim == "gamma") {
-            console.log(d, this.y[dim](d.length))
           }
           return this.chart_height - this.y[dim](d.length); })
         .attr("width", (d) => {
