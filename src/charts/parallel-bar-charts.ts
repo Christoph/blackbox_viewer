@@ -140,6 +140,7 @@ export class parallelBarCharts {
 
   updateHighlight() {
     let self = this;
+    // TODO: NOrmlize color or opacity over all charts!
 
     for (var dim in this.charts) {
       if(this.mode == "Opacity") {
@@ -187,7 +188,7 @@ export class parallelBarCharts {
           .style("fill", function(bar) {
             let opacity = 0;
             let counter = 0;
-            
+
             self.data.forEach((d) => {
               let value = d["data"][dim];
 
