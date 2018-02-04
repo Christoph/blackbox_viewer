@@ -150,7 +150,7 @@ export class parallelBarCharts {
               self.data.forEach((d) => {
                 let value = d["data"][dim];
 
-                if(value > bar.x0 && value < bar.x1) {
+                if(value >= bar.x0 && value <= bar.x1) {
                   opacity += d["highlight"]
                 }
               })
@@ -168,7 +168,7 @@ export class parallelBarCharts {
             self.data.forEach((d) => {
               let value = d["data"][dim];
 
-              if(value > bar.x0 && value < bar.x1) {
+              if(value >= bar.x0 && value <= bar.x1) {
                 opacity += d["highlight"]
               }
             })
@@ -186,7 +186,7 @@ export class parallelBarCharts {
             self.data.forEach((d) => {
               let value = d["data"][dim];
 
-              if(value > bar.x0 && value < bar.x1) {
+              if(value >= bar.x0 && value <= bar.x1) {
                 opacity += d["highlight"]
               }
             })
@@ -276,7 +276,7 @@ export class parallelBarCharts {
       bar_chart.enter().append("rect")
         .attr("class", "bar-parallel")
         .attr("transform", (d) => {
-          return "translate(" + (this.x[dim](d.x1) + 1) + ", " + (this.y[dim](d.length)) + ")";
+          return "translate(" + (this.x[dim](d.x1)) + ", " + (this.y[dim](d.length)) + ")";
         })
         .attr("x", 1)
         .attr("height", (d) => {

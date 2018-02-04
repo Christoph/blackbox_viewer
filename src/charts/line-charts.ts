@@ -529,7 +529,7 @@ export class LineCharts {
           self.data.forEach((d: any[]) => {
             let value = d["data"][self.selected_time][dim];
 
-            if(value > b.x0 && value < b.x1) {
+            if(value >= b.x0 && value <= b.x1) {
               opacity += d["highlight"]
             }
           })
@@ -552,7 +552,7 @@ export class LineCharts {
           self.data.forEach((d: any[]) => {
             let value = d["data"][self.selected_time][dim];
 
-            if(value > b.x0 && value < b.x1) {
+            if(value >= b.x0 && value <= b.x1) {
               opacity += d["highlight"]
             }
           })
@@ -575,7 +575,7 @@ export class LineCharts {
           self.data.forEach((d: any[]) => {
             let value = d["data"][self.selected_time][dim];
 
-            if(value > b.x0 && value < b.x1) {
+            if(value >= b.x0 && value <= b.x1) {
               opacity += d["highlight"]
             }
           })
