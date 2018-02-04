@@ -37,6 +37,7 @@ export class parallelBarCharts {
   private color_plasma;
   private chart_height;
   private chart_offset;
+  private brushes = new Map();
 
   // set the dimensions and margins of the graph
   private x_size = 500;
@@ -90,34 +91,28 @@ export class parallelBarCharts {
     this.subscription.dispose();
   }
 
+  private removeBrushing = (dim) => {
+    this.brushes.delete(dim)
+
+    let brushed = _.intersection(...Array.from(this.brushes.values()));
+
+    if (this.brushes.size > 0 && brushed.length == 0) {
+      brushed.push("x")
+    }
+
+    this.brushing = brushed;
+  }
+
   // Update external variables with current brushes
-  private getBrushing = (g, x, dat) => {
-    let temp = <any>[];
-    let brushes = new Map();
+  private getBrushing = (dim, low, high) => {
+    let brushed_elements = this.data.filter(x => x["data"][dim] >= low && x["data"][dim] <= high).map(x => x.id)
+    this.brushes.set(dim, brushed_elements)
 
-    g.selectAll(".brush")
-      .filter(function(this, d) {
-        return d3.brushSelection(this);
-      })
-      .each(function(this, d) {
-        let brush_selection = d3.brushSelection(this)
-        let extent = <any>[]
-        let selection = <any>[];
-
-        if (brush_selection != null) {
-          extent = [x[d].invert(brush_selection[1]), x[d].invert(brush_selection[0])]
-        }
-
-        let brushed_elements = dat.filter(x => x["data"][d] >= extent[1] && x["data"][d] <= extent[0])
-
-        brushes.set(d, brushed_elements.map(x => x["id"]))
-      });
-
-    let brushed = _.intersection(...Array.from(brushes.values()));
+    let brushed = _.intersection(...Array.from(this.brushes.values()));
 
     // If no element is brushed return a x to let the system know that
     // there are brushes active
-    if (brushes.size > 0 && brushed.length == 0) {
+    if (this.brushes.size > 0 && brushed.length == 0) {
       brushed.push("x")
     }
 
@@ -125,9 +120,6 @@ export class parallelBarCharts {
   }
 
   initChart() {
-    // append the svg object to the chart div of the page
-    // append a 'group' element to 'svg'
-    // moves the 'group' element to the top left margin
     this.svg = d3.select(this.element)
       .append("svg")
       .attr("width", this.width + this.margin.left + this.margin.right)
@@ -205,13 +197,6 @@ export class parallelBarCharts {
           })
         }
     }
-
-    // else if(this.mode = "Color-Plasma") {
-    //   this.svg.selectAll(".bar-parallel")
-    //     .style("fill", function(d) {
-    //       return self.color_plasma(d["highlight"])
-    //     })
-    // }
   }
 
   updateChart() {
@@ -302,28 +287,51 @@ export class parallelBarCharts {
           return this.x[dim](d.x0) - this.x[dim](d.x1) - 1;
         })
 
+      // Add and store a brush for each axis.
+      g.append("g")
+        .attr("class", "brush")
+        .each(function(this, d) {
+          d3.select(this).call(d3.brushX()
+            .extent([[-2, -2], [self.width+2, self.chart_height+2]])
+            .on("brush", () => {
+              if (!d3.event.sourceEvent) return; // Only transition after input.
+              let range = d3.event.selection.map(self.x[dim].invert)
+              let d0 = range[1]
+              let d1 = range[0]
+
+              self.getBrushing(dim, d0, d1)
+            })
+            .on("end", () => {
+              if (!d3.event.sourceEvent) return; // Only transition after input.
+              if (!d3.event.selection) {
+                self.removeBrushing(dim)
+                return
+              };
+
+              let range = d3.event.selection.map(self.x[dim].invert)
+              let d0 = range[1]
+              let d1 = range[0]
+              let borders = [d3.min(self.bins[dim], x => x["x0"])]
+              borders.push(...self.bins[dim].map(b => b.x1))
+
+              var closest_low = borders.reduce(function(prev: any, curr: any) {
+                return (Math.abs(curr - d0) < Math.abs(prev - d0) ? curr : prev);
+              });
+
+              var closest_high = borders.reduce(function(prev: any, curr: any) {
+                return (Math.abs(curr - d1) < Math.abs(prev - d1) ? curr : prev);
+              });
+
+              d3.select(this).transition().duration(500).call(d3.event.target.move, [closest_high, closest_low].map(self.x[dim]));
+
+              self.getBrushing(dim, closest_low, closest_high)
+            })
+          );
+        })
+
       this.charts[dim] = g
 
       margin_iterator++;
     });
-
-    // Add and store a brush for each axis.
-    // g.append("g")
-    //   .attr("class", "brush")
-    //   .each(function(this, d) {
-    //     d3.select(this).call(d3.brushX()
-    //       .extent([[0, -9], [self.width, 9]])
-    //       .on("brush", () => {
-    //         if (!d3.event.sourceEvent) return; // Only transition after input.
-    //
-    //         // self.getBrushing(g, x, dat)
-    //       })
-    //       .on("end", () => {
-    //         if (!d3.event.sourceEvent) return; // Only transition after input.
-    //
-    //         // getBrushing(g, x, dat)
-    //       })
-    //     );
-    //   })
   }
 }

@@ -79,4 +79,7 @@ rect.bar {
 
 rect.bar-parallel {
   fill: steelblue;
+  outline-width: thin;
+  outline-style: solid;
+  outline-color: #c7c7c7;
 }
