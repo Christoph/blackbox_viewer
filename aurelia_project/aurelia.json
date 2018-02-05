@@ -1,5 +1,5 @@
 {
-  "name": "Improve",
+  "name": "Blackbox Viewer",
   "type": "project:application",
   "platform": {
     "id": "web",

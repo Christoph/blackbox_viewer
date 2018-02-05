@@ -144,7 +144,7 @@ export class Gauss {
     }
     else {
       this.data_parallel.forEach(x => {
-        x["highlight"] = 1;
+        x["highlight"] = 0;
       })
     }
 
