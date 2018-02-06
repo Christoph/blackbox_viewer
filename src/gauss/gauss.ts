@@ -104,7 +104,8 @@ export class Gauss {
 
   private updateOutData(mapping) {
     // Set highlight colors
-    this.data_lines.forEach(x => {
+    this.data_lines
+    .forEach(x => {
       x["highlight"] = mapping.get(x["id"])
     })
 
