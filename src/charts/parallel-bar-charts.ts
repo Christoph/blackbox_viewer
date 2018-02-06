@@ -163,6 +163,45 @@ export class parallelBarCharts {
             return opacity / counter
           })
         }
+        else if(this.mode = "Opacity + Viridis") {
+          this.charts[dim].selectAll(".bar-parallel")
+            .attr("opacity", function(bar) {
+              let opacity = 0;
+              let counter = 0;
+
+              self.data.forEach((d) => {
+                let value = d["data"][dim];
+
+                if(value >= bar.x0 && value <= bar.x1) {
+                  counter++;
+                  opacity += d["highlight"]
+                }
+              })
+
+              if(bar.length < 1) return 0;
+
+              return opacity / counter
+            })
+
+          this.charts[dim].selectAll(".bar-parallel")
+            .style("fill", function(bar) {
+              let opacity = 0;
+              let counter = 0;
+
+              self.data.forEach((d) => {
+                let value = d["data"][dim];
+
+                if(value >= bar.x0 && value <= bar.x1) {
+                  counter++;
+                  opacity += d["highlight"]
+                }
+              })
+
+              if(bar.length < 1) return 0;
+
+              return self.color_viridis(opacity / counter)
+            })
+        }
         else if(this.mode = "Color-Viridis") {
           this.charts[dim].selectAll(".bar-parallel")
           .style("fill", function(bar) {

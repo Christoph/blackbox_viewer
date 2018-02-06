@@ -541,6 +541,55 @@ export class LineCharts {
           return opacity / counter
         })
     }
+    else if(this.mode = "Opacity + Viridis") {
+      this.charts.get(dim).linechart.selectAll("path.line")
+        .attr("opacity", function(d) {
+          return d["highlight"]
+        })
+
+      this.charts.get(dim).focus.selectAll("rect.bar")
+        .attr("opacity", function(b) {
+          let opacity = 0;
+          let counter = 0;
+
+          self.data.forEach((d: any[]) => {
+            let value = d["data"][self.selected_time][dim];
+
+            if(value >= b.x0 && value <= b.x1) {
+              counter++;
+              opacity += d["highlight"]
+            }
+          })
+
+          if(b.length < 1) return 0;
+
+          return opacity / counter
+        })
+        
+      this.charts.get(dim).linechart.selectAll("path.line")
+        .style("stroke", function(d) {
+          return self.color_viridis(d["highlight"])
+        })
+
+      this.charts.get(dim).focus.selectAll("rect.bar")
+        .style("fill", function(b) {
+          let opacity = 0;
+          let counter = 0;
+
+          self.data.forEach((d: any[]) => {
+            let value = d["data"][self.selected_time][dim];
+
+            if(value >= b.x0 && value <= b.x1) {
+              counter++;
+              opacity += d["highlight"]
+            }
+          })
+
+          if(b.length < 1) return 0;
+
+          return self.color_viridis(opacity / counter)
+        })
+    }
     else if(this.mode = "Color-Viridis") {
       this.charts.get(dim).linechart.selectAll("path.line")
         .style("stroke", function(d) {

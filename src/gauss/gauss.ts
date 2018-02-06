@@ -10,8 +10,8 @@ export class Gauss {
   selected_dim = "";
   dim_not_selected = true;
   data_not_loaded = true;
-  modes = ["Opacity", "Color-Plasma", "Color-Viridis"];
-  selected_mode = "Opacity";
+  modes = ["Opacity + Viridis", "Opacity", "Color-Plasma", "Color-Viridis"];
+  selected_mode = "Opacity + Viridis";
 
   @observable brushing_parallel;
   redraw_parallel;
