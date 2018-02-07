@@ -38,6 +38,8 @@ export class parallelBarCharts {
   private chart_height;
   private chart_offset;
   private brushes = new Map();
+  private quantize;
+  private quantize_opacity;
 
   // set the dimensions and margins of the graph
   private x_size = 500;
@@ -135,6 +137,20 @@ export class parallelBarCharts {
     this.color_plasma = d3.scaleSequential(d3.interpolatePlasma)
       .domain([0, 1])
 
+    this.quantize = d3.scaleQuantize()
+      .domain([0,1])
+      .range([
+        this.color_viridis(0),
+        this.color_viridis(0.25),
+        this.color_viridis(0.5),
+        this.color_viridis(0.75),
+        this.color_viridis(1),
+      ]);
+
+    this.quantize_opacity = d3.scaleQuantize()
+      .domain([0,1])
+      .range([0.1, 0.3, 0.6, 0.8, 1]);
+
     this.initialized = true;
   }
 
@@ -180,7 +196,8 @@ export class parallelBarCharts {
 
               if(bar.length < 1) return 0;
 
-              return opacity / counter
+              if(opacity > 0) return self.quantize_opacity(opacity / counter)
+              else return 0
             })
 
           this.charts[dim].selectAll(".bar-parallel")
@@ -199,7 +216,7 @@ export class parallelBarCharts {
 
               if(bar.length < 1) return 0;
 
-              return self.color_viridis(opacity / counter)
+              return self.quantize(opacity / counter)
             })
         }
         else if(this.mode = "Color-Viridis") {

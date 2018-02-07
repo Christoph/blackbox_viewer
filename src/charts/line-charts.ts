@@ -51,6 +51,8 @@ export class LineCharts {
   private color_plasma;
   private x_weight = new Map();;
   private quantize;
+  private quantize_opacity;
+  private weight_to_highlight;
   private lineGenerator;
 
   // set the dimensions and margins of the graph
@@ -212,15 +214,28 @@ export class LineCharts {
   resolve_brushing(dim) {
     let out = new Map()
 
-    // this.filters.set(dim, new_filter)
-
     this.data.forEach(d => {
       if(d.data[this.selected_time][dim] >= this.center-this.weight &&
-      d.data[this.selected_time][dim] <= this.center+this.weight)
-      out.set(
-        d["id"],
-        0.5
-      )
+      d.data[this.selected_time][dim] <= this.center+this.weight) {
+        if(d.data[this.selected_time][dim] < this.center) {
+          out.set(
+            d["id"],
+            this.weight_to_highlight(d.data[this.selected_time][dim] - (this.center - this.weight))
+          )
+        }
+        else {
+          out.set(
+            d["id"],
+            this.weight_to_highlight(Math.abs(d.data[this.selected_time][dim] - (this.center + this.weight)))
+          )
+        }
+      }
+      else {
+        out.set(
+          d["id"],
+          0
+        )
+      }
     })
 
     // // Update average filter
@@ -287,7 +302,7 @@ export class LineCharts {
       .domain([0, 1])
 
     this.quantize = d3.scaleQuantize()
-      // .domain([0, 50])
+      .domain([0,1])
       .range([
         this.color_viridis(0),
         this.color_viridis(0.25),
@@ -295,6 +310,13 @@ export class LineCharts {
         this.color_viridis(0.75),
         this.color_viridis(1),
       ]);
+
+    this.quantize_opacity = d3.scaleQuantize()
+      .domain([0,1])
+      .range([0.1, 0.35, 0.7, 0.9, 1]);
+
+    this.weight_to_highlight = d3.scaleLinear()
+      .range([0,1])
 
     // Create initial chart areas
     let margin_iterator = 0;
@@ -326,18 +348,10 @@ export class LineCharts {
           self.center = self.y.get(dim).invert(d3.mouse(this)[1]);
           self.weight = self.x_weight.get(dim)(d3.mouse(this)[0]);
 
-          self.quantize.domain([0, self.weight])
+          self.weight_to_highlight.domain([0, self.weight])
 
           self.createBrush(dim);
           self.updateBrush(dim);
-
-          // let new_filter = new Map()
-          // self.data.forEach(d => {
-          //   new_filter.set(
-          //     d["id"],
-          //     self.gradientColor(self.gaussian(self.gauss_y.get(dim).invert(d.data[self.selected_time][dim]), self.gauss_y.get(dim).invert(self.center), self.gauss_sigma(self.weight)))
-          //   )
-          // })
 
           self.resolve_brushing(dim);
 
@@ -346,19 +360,10 @@ export class LineCharts {
               self.center = self.y.get(dim).invert(d3.mouse(this)[1]);
               self.weight = self.x_weight.get(dim)(d3.mouse(this)[0]);
 
-              self.quantize.domain([0, self.weight])
+              self.weight_to_highlight.domain([0, self.weight])
 
               self.updateBrush(dim);
-              //
-              // let new_filter = new Map()
-              //
-              // self.data.forEach(d => {
-              //   new_filter.set(
-              //     d["id"],
-              //     self.gradientColor(self.gaussian(self.gauss_y.get(dim).invert(d.data[self.selected_time][dim]), self.gauss_y.get(dim).invert(self.center), self.gauss_sigma(self.weight)))
-              //   )
-              // })
-              //
+
               self.resolve_brushing(dim);
             })
             .on("mouseup", function(d) {
@@ -598,7 +603,10 @@ export class LineCharts {
     else if(this.mode = "Opacity + Viridis") {
       this.charts.get(dim).linechart.selectAll("path.line")
         .attr("opacity", function(d) {
-          return d["highlight"]
+          // return d["highlight"]
+
+          if(d["highlight"] > 0) return self.quantize_opacity(d["highlight"])
+          else return 0
         })
 
       this.charts.get(dim).focus.selectAll("rect.bar")
@@ -617,12 +625,13 @@ export class LineCharts {
 
           if(b.length < 1) return 0;
 
-          return opacity / counter
+          if(opacity > 0) return self.quantize_opacity(opacity / counter)
+          else return 0
         })
 
       this.charts.get(dim).linechart.selectAll("path.line")
         .style("stroke", function(d) {
-          return self.color_viridis(d["highlight"])
+          return self.quantize(d["highlight"])
         })
 
       this.charts.get(dim).focus.selectAll("rect.bar")
@@ -641,7 +650,7 @@ export class LineCharts {
 
           if(b.length < 1) return 0;
 
-          return self.color_viridis(opacity / counter)
+          return self.quantize(opacity / counter)
         })
     }
     else if(this.mode = "Color-Viridis") {
