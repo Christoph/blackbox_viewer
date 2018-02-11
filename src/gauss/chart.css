@@ -17,13 +17,17 @@
 
 .time-selector {
   cursor: all-scroll;
+  text-align: center;
 }
 
-.time-selector:hover {
+.time-selector circle:hover {
   stroke: steelblue;
   stroke-width: 2px;
 }
 
+.time-selector text {
+  font-size: small;
+}
 
 .axis line,
 .axis path {

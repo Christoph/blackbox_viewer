@@ -6,7 +6,7 @@ import { inject, noView, bindable, bindingMode, BindingEngine } from 'aurelia-fr
 @noView()
 export class LineCharts {
   // One-Way
-  @bindable margin = { top: 20, right: 40, bottom: 35, left: 40, middle: 20, y: 35 };
+  @bindable margin = { top: 25, right: 40, bottom: 35, left: 40, middle: 40, y: 40 };
   @bindable x_attribute = "x";
   @bindable x_label = "days";
   @bindable redraw = 0;
@@ -344,13 +344,20 @@ export class LineCharts {
               d3.select(this).select("circle")
                 .raise()
                 .attr("cx", d3.event.x)
-              }
+
+              d3.select(this).select("text")
+                .raise()
+                .attr("x", d3.event.x - 10)
+            }
 
               let closest = self.x_values.reduce(function(prev, curr) {
                 return (Math.abs(curr - self.x.invert(d3.event.x)) < Math.abs(prev - self.x.invert(d3.event.x)) ? curr : prev);
               });
 
               self.selected_time = closest
+
+              d3.select(this).select("text")
+                .text(self.selected_time)
 
               self.updateBars(dim);
           })
@@ -376,6 +383,10 @@ export class LineCharts {
           .attr("cx", this.lc_width)
           .attr("cy", 0)
           .attr("r", 10)
+
+        selector.append("text")
+          .attr("x", this.lc_width - 10)
+          .attr("y", -10)
 
         // add the x Axis
         focus.append("g")
@@ -667,7 +678,7 @@ export class LineCharts {
       let y_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[dim]))
       let y_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[dim]))
 
-    this.selected_time = x_max;
+      this.selected_time = x_max;
 
       let focus_data = <any>[];
       this.data.forEach((d: any[]) => {
@@ -675,7 +686,7 @@ export class LineCharts {
       })
 
       this.y.get(dim).domain([y_min, y_max]);
-      
+
       this.bins = d3.histogram()
         .domain(this.y.get(dim).domain())
         .thresholds(d3.range(y_min, y_max, (y_max - y_min) / 20))
