@@ -32,13 +32,7 @@ export class LineCharts {
   private x;
   private y = new Map();
   private focus_x = new Map();
-  private gauss_x;
-  private gauss_y = new Map();
-  private gauss_sigma;
-  private gauss_max_sigma;
-  private gradientColor;
   private valueline = new Map();
-  private focusline = new Map();
   private filters = new Map()
   private focus_data;
   private histogram;
@@ -146,48 +140,6 @@ export class LineCharts {
     return data
   }
 
-  getGaussian(dim) {
-    let data = [];
-    let rnd = d3.randomUniform(-5, 5);
-
-    // loop to populate data array with
-    // probability - quantile pairs
-    for (var i = 0; i < 10000; i++) {
-      let q = rnd() // calc random draw from uniform dist
-      let p = this.gaussian(q, this.gauss_y.get(dim).invert(this.center), this.gauss_sigma(this.weight)) // calc prob of rand draw
-
-      // Set very low probability to zero
-      if(p < 0.0001) p = 0;
-
-      let el = {
-        "y": q,
-        "x": p
-      }
-      data.push(el)
-    };
-
-    this.gradientColor.domain([0, d3.max(data, x => x["x"])])
-    // need to sort for plotting
-    data.sort(function(a, b) { return (a.y > b.y) ? 1 : ((b.y > a.y) ? -1 : 0); });
-
-    return data;
-  };
-
-  //taken from Jason Davies science library
-  // https://github.com/jasondavies/science.js/
-  gaussian(x, mean, sigma) {
-    let gaussianConstant = 1 / Math.sqrt(2 * Math.PI);
-
-    x = (x - mean) / sigma;
-    let g = gaussianConstant * Math.exp(-.5 * x * x) / sigma;
-
-    if (g < 0) {
-      g = 0;
-    }
-
-    return g;
-  }
-
   resetFilter(dim) {
     this.charts.get(dim).focus.selectAll("path.focusline").remove();
     let out = new Map()
@@ -288,16 +240,7 @@ export class LineCharts {
     this.x = d3.scaleLinear()
       .range([0, this.lc_width]);
 
-    this.gauss_x = d3.scaleLinear();
-
     this.lineGenerator = d3.line();
-
-    this.gauss_sigma = d3.scaleLinear()
-      .range([0.001, 3])
-      .domain([0, this.focus_width])
-
-    this.gradientColor = d3.scaleLinear()
-      .range([0, 1])
 
     this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
       .domain([0, 1])
@@ -477,27 +420,12 @@ export class LineCharts {
 
         this.x_weight.set(dim , x_weight)
 
-        let gauss_y = d3.scaleLinear()
-          .domain([-5, 5])
-
-        this.gauss_y.set(dim, gauss_y)
-
         // define the line
         let valueline = d3.line()
           .x((d) => this.x(d[this.x_attribute]))
           .y((d) => this.y.get(dim)(d[dim]));
 
         this.valueline.set(dim, valueline)
-
-        // let focusline = d3.line()
-        //   .x((d) => this.focus_x.get(dim)(this.gauss_x(d["x"])))
-        //   .y((d) => this.y.get(dim)(this.gauss_y.get(dim)(d["y"])));
-
-        let focusline = d3.line()
-          .x((d) => d[0])
-          .y((d) => this.y.get(dim)(d[1]));
-
-        this.focusline.set(dim, focusline)
 
         // Update axis
         linechart.selectAll(".xAxis")
@@ -560,18 +488,7 @@ export class LineCharts {
       .moveToBack();
 
       if(this.filters.get(dim).size > 0) {
-        this.updateGauss(dim);
-
-        let new_filter = new Map()
-
-        this.data.forEach(d => {
-          new_filter.set(
-            d["id"],
-            this.gradientColor(this.gaussian(this.gauss_y.get(dim).invert(d.data[this.selected_time][dim]), this.gauss_y.get(dim).invert(this.center), this.gauss_sigma(this.weight)))
-          )
-        })
-
-        // this.resolve_brushing(dim, new_filter);
+        this.resolve_brushing(dim);
       }
 
       this.updateHighlight(dim)
@@ -710,22 +627,6 @@ export class LineCharts {
     }
   }
 
-  createGauss(dim) {
-    let line_data = this.getGaussian(dim);
-    this.gauss_x.range(this.focus_x.get(dim).domain()).domain(d3.extent(line_data, d => d["x"]))
-
-    this.charts.get(dim).focus.selectAll("path.focusline").remove();
-    let focus_line = this.charts.get(dim).focus.selectAll("path.focusline")
-      .data([line_data])
-
-    // Distribution line
-    focus_line.enter()
-      .append("path")
-      .attr("class", "focusline")
-      .attr("d", (d) => {this.focusline.get(dim)(d)})
-      .moveToFront();
-  }
-
   createBrush(dim) {
     let line_data = this.getLine(dim);
 
@@ -752,19 +653,6 @@ export class LineCharts {
       .moveToFront();
   }
 
-  updateGauss(dim) {
-    let line_data = this.getGaussian(dim);
-
-    // Update x axis domain
-    this.gauss_x.range(this.focus_x.get(dim).domain()).domain(d3.extent(line_data, d => d["x"]))
-
-    // Update line
-    this.charts.get(dim).focus.selectAll("path.focusline")
-      .data([line_data])
-      .attr("d", (d) => this.focusline.get(dim)(d))
-      .moveToFront();
-  }
-
   updateChart() {
     // Update domains
     let x_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[this.x_attribute]))
@@ -787,8 +675,7 @@ export class LineCharts {
       })
 
       this.y.get(dim).domain([y_min, y_max]);
-      this.gauss_y.get(dim).range(this.y.get(dim).domain())
-
+      
       this.bins = d3.histogram()
         .domain(this.y.get(dim).domain())
         .thresholds(d3.range(y_min, y_max, (y_max - y_min) / 20))
