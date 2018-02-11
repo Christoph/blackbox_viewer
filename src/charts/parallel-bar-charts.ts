@@ -394,8 +394,9 @@ export class parallelBarCharts {
         // Add titles for the axis
         g.append("text")
           .style("text-anchor", "middle")
-          .attr("y", this.chart_height + 26)
-          .attr("x", this.width / 2)
+          .attr("transform", "rotate(-90)")
+          .attr("y", -25)
+          .attr("x", (this.chart_height - this.margin.middle)/2 - this.margin.top)
           .text(dim);
 
       let bar_chart = g.selectAll("rect.bars")
