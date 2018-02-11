@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import * as _ from "lodash";
 import { inject, noView, bindable, bindingMode, BindingEngine } from 'aurelia-framework';
 
 @inject(Element, BindingEngine)
@@ -213,47 +214,49 @@ export class LineCharts {
 
   resolve_brushing(dim) {
     let out = new Map()
+    let temp = new Map()
 
     this.data.forEach(d => {
       if(d.data[this.selected_time][dim] >= this.center-this.weight &&
       d.data[this.selected_time][dim] <= this.center+this.weight) {
         if(d.data[this.selected_time][dim] < this.center) {
-          out.set(
+          temp.set(
             d["id"],
             this.weight_to_highlight(d.data[this.selected_time][dim] - (this.center - this.weight))
           )
         }
         else {
-          out.set(
+          temp.set(
             d["id"],
             this.weight_to_highlight(Math.abs(d.data[this.selected_time][dim] - (this.center + this.weight)))
           )
         }
       }
       else {
-        out.set(
+        temp.set(
           d["id"],
           0
         )
       }
     })
 
-    // // Update average filter
-    // new_filter.forEach((v, k) => {
-    //   let temp = 0;
-    //   let counter = 0;
-    //
-    //   this.filters.forEach((iv, ik) => {
-    //     if (iv.size > 0) {
-    //       temp = temp + iv.get(k);
-    //       counter++;
-    //     }
-    //   })
-    //
-    //   temp = temp / counter;
-    //
-    //   out.set(k, temp)
-    // })
+    this.filters.set(dim, temp)
+
+    // Update average filter
+    this.filters.forEach((v, k) => {
+      if(v.size > 0) {
+        v.forEach((iv, ik) => {
+          if(out.has(ik)) {
+            let value = out.get(ik)
+
+            out.set(ik, (value + iv)/2)
+          }
+          else {
+            out.set(ik, iv)
+          }
+        })
+      }
+    })
 
     this.brushing = out;
   }
@@ -321,6 +324,17 @@ export class LineCharts {
     // Create initial chart areas
     let margin_iterator = 0;
     this.dimensions.map((dim) => {
+      function updateBrushing(d) {
+        self.center = self.y.get(dim).invert(d3.mouse(this)[1]);
+        self.weight = self.x_weight.get(dim)(d3.mouse(this)[0]);
+
+        self.weight_to_highlight.domain([0, self.weight])
+
+        self.updateBrush(dim);
+
+        self.resolve_brushing(dim);
+      }
+
       // Linechart area
       let linechart = this.svg
         .append("g")
@@ -350,22 +364,13 @@ export class LineCharts {
 
           self.weight_to_highlight.domain([0, self.weight])
 
-          self.createBrush(dim);
-          self.updateBrush(dim);
+          self.createBrush(dim); // 2
+          self.updateBrush(dim); // 0
 
-          self.resolve_brushing(dim);
+          self.resolve_brushing(dim); // 4
 
           self.mouse_event = d3.select(this)
-            .on("mousemove", function(d) {
-              self.center = self.y.get(dim).invert(d3.mouse(this)[1]);
-              self.weight = self.x_weight.get(dim)(d3.mouse(this)[0]);
-
-              self.weight_to_highlight.domain([0, self.weight])
-
-              self.updateBrush(dim);
-
-              self.resolve_brushing(dim);
-            })
+            .on("mousemove", _.throttle(updateBrushing, 50))
             .on("mouseup", function(d) {
               self.mouse_event.on("mousemove", null).on("mouseup", null);
             })
