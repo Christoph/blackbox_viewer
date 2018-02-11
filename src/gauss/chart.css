@@ -40,29 +40,14 @@
   fill: none;
   stroke: steelblue;
   stroke-width: 1.5px;
-  shape-rendering: crispEdges;
+  shape-rendering: auto;
 }
 
 .focusline {
   fill: none;
   stroke: black;
   stroke-width: 1px;
-  shape-rendering: crispEdges;
-}
-
-.line.highlight {
-  fill: none;
-  stroke: steelblue;
-  stroke-width: 2px;
-  shape-rendering: crispEdges;
-}
-
-.line.background {
-  fill: none;
-  stroke: #ddd;
-  stroke-width: 2px;
-  opacity: 0.5;
-  shape-rendering: crispEdges;
+  shape-rendering: auto;
 }
 
 .focus_element {
