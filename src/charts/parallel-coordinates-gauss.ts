@@ -218,18 +218,7 @@ export class parallelCoordinatesGauss {
       .data(this.data)
       .enter().append("path")
       .attr("class", "line")
-      // .classed("highlight", function(this, d) {
-      //   if (d["highlight"] == 1) { return true; }
-      //   else { return false; }
-      // })
-      // .classed("background", function(this, d) {
-      //   if (d["highlight"] == 2) { return true; }
-      //   else { return false; }
-      // })
       .attr("d", (d) => { return this.path(d["data"]) })
-      // .on("click", (d) => {
-      //   this.selected = d["id"]
-      // });
 
     // Create local versions of class variables
     // This is necessary due to the nature of TS and D3

@@ -6,7 +6,7 @@ import { inject, noView, bindable, bindingMode, BindingEngine } from 'aurelia-fr
 @noView()
 export class parallelBarCharts {
   // One-Way
-  @bindable margin = { top: 20, right: 40, bottom: 60, left: 20, middle: 35, y: 35 };
+  @bindable margin = { top: 20, right: 40, bottom: 60, left: 20, middle: 70, y: 35 };
   @bindable redraw = 0;
   @bindable reset = 0;
   @bindable mode = "Opacity";
@@ -28,11 +28,12 @@ export class parallelBarCharts {
   private chart;
   private x = {};
   private y = {};
+  private y_lines;
   private bins = {};
   private charts = {};
   private dimensions = <any>[];
   private line;
-  private background;
+  private parcoords;
   private color_viridis;
   private color_plasma;
   private chart_height;
@@ -40,6 +41,7 @@ export class parallelBarCharts {
   private brushes = new Map();
   private quantize;
   private quantize_opacity;
+  private line_data = [];
 
   // set the dimensions and margins of the graph
   private x_size = 500;
@@ -93,6 +95,13 @@ export class parallelBarCharts {
     this.subscription.dispose();
   }
 
+  // Draw the lines
+  private path(d) {
+    return this.line(this.line_data.map((row) => {
+      return [this.x[row.dim](d[row.dim]), row.y];
+    }));
+  }
+
   private removeBrushing = (dim) => {
     this.brushes.delete(dim)
 
@@ -132,6 +141,10 @@ export class parallelBarCharts {
       .attr("transform",
       "translate(" + this.margin.left + "," + this.margin.top + ")");
 
+    this.parcoords =
+      this.chart.append("g")
+
+
     this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
       .domain([0, 1])
     this.color_plasma = d3.scaleSequential(d3.interpolatePlasma)
@@ -150,6 +163,12 @@ export class parallelBarCharts {
     this.quantize_opacity = d3.scaleQuantize()
       .domain([0,1])
       .range([0.1, 0.3, 0.6, 0.8, 1]);
+
+    this.y_lines = d3.scalePoint()
+      .range([0, this.height- this.margin.top - this.margin.bottom]);
+
+    this.line = d3.line()
+      .curve(d3.curveMonotoneY);
 
     this.initialized = true;
   }
@@ -178,27 +197,39 @@ export class parallelBarCharts {
 
             return opacity / counter
           })
+
+          this.svg.selectAll(".line")
+            .attr("opacity", function(d) {
+              return d["highlight"]
+            })
+            .moveToBack()
         }
         else if(this.mode = "Opacity + Viridis") {
-          this.charts[dim].selectAll(".bar-parallel")
-            .attr("opacity", function(bar) {
-              let opacity = 0;
-              let counter = 0;
+          let opacity = 0;
+          let counter = 0;
 
-              self.data.forEach((d) => {
-                let value = d["data"][dim];
+          // this.charts[dim].selectAll(".bar-parallel")
+          //   .attr("opacity", function(bar) {
+          //     self.data.forEach((d) => {
+          //       let value = d["data"][dim];
+          //
+          //       if(value >= bar.x0 && value <= bar.x1) {
+          //         counter++;
+          //         opacity += d["highlight"]
+          //       }
+          //     })
+          //
+          //     if(bar.length < 1) return 0;
+          //
+          //     if(opacity > 0) return self.quantize_opacity(opacity / counter)
+          //     else return 0
+          //   })
 
-                if(value >= bar.x0 && value <= bar.x1) {
-                  counter++;
-                  opacity += d["highlight"]
-                }
-              })
-
-              if(bar.length < 1) return 0;
-
-              if(opacity > 0) return self.quantize_opacity(opacity / counter)
-              else return 0
+          this.svg.selectAll(".line")
+            .attr("opacity", function(d) {
+              return d["highlight"]
             })
+            .moveToBack()
 
           this.charts[dim].selectAll(".bar-parallel")
             .style("fill", function(bar) {
@@ -216,8 +247,19 @@ export class parallelBarCharts {
 
               if(bar.length < 1) return 0;
 
-              return self.quantize(opacity / counter)
+              if(opacity <= 0) {
+                return "white"
+              }
+              else {
+                return self.quantize(opacity / counter)
+              }
             })
+
+          this.svg.selectAll(".line")
+            .style("stroke", function(d) {
+              return self.color_viridis(d["highlight"])
+            })
+            .moveToBack()
         }
         else if(this.mode = "Color-Viridis") {
           this.charts[dim].selectAll(".bar-parallel")
@@ -270,7 +312,30 @@ export class parallelBarCharts {
       this.dimensions = d3.keys(this.data[0]["data"]);
     }
 
-    this.chart_height = (this.y_size - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.y))/this.dimensions.length;
+    this.y_lines.domain(this.dimensions);
+
+    this.chart_height = (this.y_size - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.middle))/this.dimensions.length;
+
+    this.line_data.length = 0
+    this.dimensions.forEach((x, i) => {
+      if(i == 0) {
+        this.line_data.push({
+          dim: x,
+          y: this.chart_height * (i+1) + this.margin.middle * i
+        })
+      }
+      else {
+        this.line_data.push({
+          dim: x,
+          y: this.chart_height * i + this.margin.middle * i
+        })
+
+        this.line_data.push({
+          dim: x,
+          y: this.chart_height * (i+1) + this.margin.middle * i
+        })
+      }
+    })
 
     let margin_iterator = 0;
 
@@ -396,5 +461,17 @@ export class parallelBarCharts {
 
       margin_iterator++;
     });
+
+    // Draw lines
+    this.parcoords
+      .attr("transform", "translate(" + this.margin.left + ", " + this.margin.top + ")")
+      .selectAll("path")
+      .data(this.data)
+      .enter().append("path")
+      .attr("class", "line")
+      .attr("d", (d) => {
+        return this.path(d["data"])
+      })
+      .moveToBack()
   }
 }
