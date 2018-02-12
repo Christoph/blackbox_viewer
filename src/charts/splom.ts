@@ -31,35 +31,17 @@ export class Splom {
   private brushCell;
   private domainByTrait = {};
   private brush;
+  private color_viridis;
+  private quantize;
+  private quantize_opacity;
 
-  // private focus_x = new Map();
-  // private valueline = new Map();
   private filters = new Map()
-  // private focus_data;
-  // private histogram;
-  // private center = 1.0;
-  // private weight = 1.0;
-  // private selected_time;
-  // private bins;
-  // private x_values;
-  // private color_viridis;
-  // private color_plasma;
-  // private x_weight = new Map();;
-  // private quantize;
-  // private quantize_opacity;
-  // private weight_to_highlight;
-  // private lineGenerator;
 
   // set the dimensions and margins of the graph
   private width;
   private height;
   private x_size = 900;
   private y_size = 500;
-  // private lc_width = 50;
-  // private lc_height = 500;
-  // private focus_width = 50;
-  // private focus_height = 500;
-  // private focus_offset = 100;
 
   constructor(element, private bindingEngine) {
     this.element = element;
@@ -197,140 +179,45 @@ export class Splom {
   initChart() {
     let self = this;
 
+    this.svg = d3.select(this.element).append("svg")
+        .attr("width", this.width)
+        .attr("height", this.width)
+      .append("g")
+        .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
+
+    this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
+      .domain([0, 1])
+
+    this.quantize = d3.scaleQuantize()
+      .domain([0,1])
+      .range([
+        this.color_viridis(0),
+        this.color_viridis(0.25),
+        this.color_viridis(0.5),
+        this.color_viridis(0.75),
+        this.color_viridis(1),
+      ]);
+
+    this.quantize_opacity = d3.scaleQuantize()
+      .domain([0,1])
+      .range([0.1, 0.35, 0.7, 0.9, 1]);
+
     this.initialized = true;
   }
 
   updateHighlight() {
     let self = this;
-    //
-    // if(this.mode == "Opacity") {
-    //   this.charts.get(dim).linechart.selectAll("path.line")
-    //     .attr("opacity", function(d) {
-    //       return d["highlight"]
-    //     })
-    //
-    //   this.charts.get(dim).focus.selectAll("rect.bar")
-    //     .attr("opacity", function(b) {
-    //       let opacity = 0;
-    //       let counter = 0;
-    //
-    //       self.data.forEach((d: any[]) => {
-    //         let value = d["data"][self.selected_time][dim];
-    //
-    //         if(value >= b.x0 && value <= b.x1) {
-    //           counter++;
-    //           opacity += d["highlight"]
-    //         }
-    //       })
-    //
-    //       if(b.length < 1) return 0;
-    //
-    //       return opacity / counter
-    //     })
-    // }
-    // else if(this.mode = "Opacity + Viridis") {
-    //   this.charts.get(dim).linechart.selectAll("path.line")
-    //     .attr("opacity", function(d) {
-    //       // return d["highlight"]
-    //
-    //       if(d["highlight"] > 0) return self.quantize_opacity(d["highlight"])
-    //       else return 0
-    //     })
-    //
-    //   this.charts.get(dim).focus.selectAll("rect.bar")
-    //     .attr("opacity", function(b) {
-    //       let opacity = 0;
-    //       let counter = 0;
-    //
-    //       self.data.forEach((d: any[]) => {
-    //         let value = d["data"][self.selected_time][dim];
-    //
-    //         if(value >= b.x0 && value <= b.x1) {
-    //           counter++;
-    //           opacity += d["highlight"]
-    //         }
-    //       })
-    //
-    //       if(b.length < 1) return 0;
-    //
-    //       if(opacity > 0) return self.quantize_opacity(opacity / counter)
-    //       else return 0
-    //     })
-    //
-    //   this.charts.get(dim).linechart.selectAll("path.line")
-    //     .style("stroke", function(d) {
-    //       return self.quantize(d["highlight"])
-    //     })
-    //
-    //   this.charts.get(dim).focus.selectAll("rect.bar")
-    //     .style("fill", function(b) {
-    //       let opacity = 0;
-    //       let counter = 0;
-    //
-    //       self.data.forEach((d: any[]) => {
-    //         let value = d["data"][self.selected_time][dim];
-    //
-    //         if(value >= b.x0 && value <= b.x1) {
-    //           counter++;
-    //           opacity += d["highlight"]
-    //         }
-    //       })
-    //
-    //       if(b.length < 1) return 0;
-    //
-    //       return self.quantize(opacity / counter)
-    //     })
-    // }
-    // else if(this.mode = "Color-Viridis") {
-    //   this.charts.get(dim).linechart.selectAll("path.line")
-    //     .style("stroke", function(d) {
-    //       return self.color_viridis(d["highlight"])
-    //     })
-    //
-    //   this.charts.get(dim).focus.selectAll("rect.bar")
-    //     .style("fill", function(b) {
-    //       let opacity = 0;
-    //       let counter = 0;
-    //
-    //       self.data.forEach((d: any[]) => {
-    //         let value = d["data"][self.selected_time][dim];
-    //
-    //         if(value >= b.x0 && value <= b.x1) {
-    //           counter++;
-    //           opacity += d["highlight"]
-    //         }
-    //       })
-    //
-    //       if(b.length < 1) return 0;
-    //
-    //       return self.color_viridis(opacity / counter)
-    //     })
-    // }
-    // else if(this.mode = "Color-Plasma") {
-    //   this.charts.get(dim).linechart.selectAll("path.line")
-    //     .style("stroke", function(d) {
-    //       return self.color_plasma(d["highlight"])
-    //     })
-    //
-    //   this.charts.get(dim).focus.selectAll("rect.bar")
-    //     .style("fill", function(b) {
-    //       let opacity = 0;
-    //       let counter = 0;
-    //
-    //       self.data.forEach((d: any[]) => {
-    //         let value = d["data"][self.selected_time][dim];
-    //
-    //         if(value >= b.x0 && value <= b.x1) {
-    //           opacity += d["highlight"]
-    //           counter++;
-    //         }
-    //       })
-    //
-    //       if(b.length < 1) return 0;
-    //
-    //       return self.color_plasma(opacity / counter)
-    //     })
-    // }
+
+    self.svg.selectAll(".cell")
+      .each(function(p) {
+        var cell = d3.select(this);
+
+        cell.selectAll("circle")
+            .style("fill", function(d) {
+              if(d["highlight"] <= 0) return "white"
+              else return self.quantize(d["highlight"]);
+            });
+      });
   }
 
   updateChart() {
@@ -394,12 +281,6 @@ export class Splom {
       xAxis.tickSize(this.size * n);
       yAxis.tickSize(-this.size * n);
 
-      this.svg = d3.select("body").append("svg")
-          .attr("width", this.size * n + this.margin.padding)
-          .attr("height", this.size * n + this.margin.padding)
-        .append("g")
-          .attr("transform", "translate(" + this.margin.padding + "," + this.margin.padding / 2 + ")");
-
       this.svg.selectAll(".x.axis")
           .data(traits)
         .enter().append("g")
@@ -437,7 +318,7 @@ export class Splom {
               .enter().append("circle")
                 .attr("cx", function(d) { return self.x(d["data"][p.x]); })
                 .attr("cy", function(d) { return self.y(d["data"][p.y]); })
-                .attr("r", 4)
+                .attr("r", 3)
                 .style("fill", function(d) { return "steelblue"; });
           });
 

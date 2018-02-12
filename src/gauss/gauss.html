@@ -8,7 +8,7 @@
     <span>Brush and link input parameters and output values.</span>
     <hr>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-6">
           <div class="btn-group">
             <button style="height: 54px" class="btn btn-default" aubs-popover="title: Data Format;
                                                         body:[{
@@ -63,13 +63,7 @@
           </div>
           <button disabled.bind="dim_not_selected" class="btn btn-success" click.delegate="visualize()">Visualize</button>
 
-          <div style="width: 100%; height:700px">
-              <!-- <parallel-bar-charts
-              brushing.bind="brushing_parallel"
-              redraw.bind="redraw_parallel"
-              reset.bind="resetChart"
-              data.bind="data_parallel"
-              mode.bind="selected_mode"></parallel-bar-charts> -->
+          <div style="width: 100%;">
               <splom
               brushing.bind="brushing_parallel"
               redraw.bind="redraw_parallel"
@@ -78,7 +72,7 @@
               mode.bind="selected_mode"></splom>
           </div>
         </div>
-        <div class="col-md-8">
+        <div class="col-md-6">
           <div class="col-md-6" style="width:100%; height:800px">
               <line-charts
                   x_attribute.bind="selected_dim"
