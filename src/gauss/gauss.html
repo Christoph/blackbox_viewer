@@ -2,6 +2,7 @@
     <require from="./chart.css"></require>
     <require from="../charts/line-charts"></require>
     <require from="../charts/parallel-bar-charts"></require>
+    <require from="../charts/splom"></require>
 
     <h2>Analyze Input-Output Models</h2>
     <span>Brush and link input parameters and output values.</span>
@@ -63,12 +64,18 @@
           <button disabled.bind="dim_not_selected" class="btn btn-success" click.delegate="visualize()">Visualize</button>
 
           <div style="width: 100%; height:700px">
-              <parallel-bar-charts
+              <!-- <parallel-bar-charts
               brushing.bind="brushing_parallel"
               redraw.bind="redraw_parallel"
               reset.bind="resetChart"
               data.bind="data_parallel"
-              mode.bind="selected_mode"></parallel-bar-charts>
+              mode.bind="selected_mode"></parallel-bar-charts> -->
+              <splom
+              brushing.bind="brushing_parallel"
+              redraw.bind="redraw_parallel"
+              reset.bind="resetChart"
+              data.bind="data_parallel"
+              mode.bind="selected_mode"></splom>
           </div>
         </div>
         <div class="col-md-8">

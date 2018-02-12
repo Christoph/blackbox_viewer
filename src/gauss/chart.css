@@ -36,6 +36,45 @@
   shape-rendering: crispEdges;
 }
 
+.axis line {
+  stroke: #ddd;
+}
+
+.axis path {
+  display: none;
+}
+
+.cell text {
+  font-weight: bold;
+  text-transform: capitalize;
+  fill: black;
+}
+
+.frame {
+  fill: none;
+  stroke: #aaa;
+}
+
+circle {
+  stroke: black;
+  stroke-width: 0.1px;
+}
+
+circle.hidden {
+  fill: #ccc !important;
+}
+
+.brush-circle {
+  stroke: black;
+  stroke-opacity: .5;
+}
+
+.extent {
+  fill: #000;
+  fill-opacity: .125;
+  stroke: #fff;
+}
+
 .axis text {
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
