@@ -415,7 +415,6 @@ export class parallelBarCharts {
         })
         .attr("x", 1)
         .attr("height", (d) => {
-          console.log(this.chart_height)
           return this.chart_height - this.y[dim](d.length); })
         .attr("width", (d) => {
           return this.x[dim](d.x0) - this.x[dim](d.x1) - 1;

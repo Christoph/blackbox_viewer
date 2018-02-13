@@ -140,29 +140,29 @@ export class LineCharts {
     return data
   }
 
-  resetFilter(dim) {
-    this.charts.get(dim).focus.selectAll("path.focusline").remove();
-    let out = new Map()
-    this.filters.set(dim, new Map())
-
-    // Update average filter
-    this.filters.forEach((v, k) => {
-      if(v.size > 0) {
-        v.forEach((iv, ik) => {
-          if(out.has(ik)) {
-            let value = out.get(ik)
-
-            out.set(ik, (value + iv)/2)
-          }
-          else {
-            out.set(ik, iv)
-          }
-        })
-      }
-    })
-
-    this.brushing = out;
-  }
+  // resetFilter(dim) {
+  //   this.charts.get(dim).focus.selectAll("path.focusline").remove();
+  //   let out = new Map()
+  //   this.filters.set(dim, new Map())
+  //
+  //   // Update average filter
+  //   this.filters.forEach((v, k) => {
+  //     if(v.size > 0) {
+  //       v.forEach((iv, ik) => {
+  //         if(out.has(ik)) {
+  //           let value = out.get(ik)
+  //
+  //           out.set(ik, (value + iv)/2)
+  //         }
+  //         else {
+  //           out.set(ik, iv)
+  //         }
+  //       })
+  //     }
+  //   })
+  //
+  //   this.brushing = out;
+  // }
 
   resolve_brushing(dim) {
     let out = new Map()
@@ -285,9 +285,6 @@ export class LineCharts {
         .attr("height", this.lc_height)
         .attr("transform",
         "translate(" + this.margin.left + ", " + (this.margin.top + (this.focus_height + this.margin.y) * margin_iterator) + ")")
-        .on("click", (d) => {
-          this.resetFilter(dim);
-        });
 
       let focus = this.svg
         .append("g")
@@ -316,6 +313,9 @@ export class LineCharts {
             .on("mousemove", _.throttle(updateBrushing, 50))
             .on("mouseup", function(d) {
               self.mouse_event.on("mousemove", null).on("mouseup", null);
+            })
+            .on("mouseleave", function(d) {
+              self.mouse_event.on("mousemove", null).on("mouseleave", null);
             })
         })
         .moveToFront()
