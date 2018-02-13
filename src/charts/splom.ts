@@ -87,9 +87,12 @@ export class Splom {
 
   resetChanged() {
     if(this.initialized) {
-      this.svg.remove()
+      this.svg.remove();
       this.initialized = false;
     }
+
+    // this.initChart();
+    // this.updateChart();
   }
 
   unbind() {

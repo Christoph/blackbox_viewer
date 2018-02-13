@@ -11,6 +11,9 @@ export class Gauss {
   dim_not_selected = true;
   data_not_loaded = true;
   modes = ["Opacity + Viridis", "Opacity", "Color-Plasma", "Color-Viridis"];
+  input_modes = ["Parallel-Charts", "SPLOM"]
+  selected_input_mode = "SPLOM";
+  splom_selected = true;
   selected_mode = "Opacity + Viridis";
 
   @observable brushing_parallel;
@@ -20,6 +23,7 @@ export class Gauss {
   redraw_lines;
 
   resetChart;
+  resetInputChart;
 
   inFilter = []
 
@@ -64,10 +68,27 @@ export class Gauss {
 
   selectMode(mode) {
     this.selected_mode = mode;
+
+    this.redraw_lines = this.redraw_lines == 0 ? 1 : 0;
+    this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
+  }
+
+  selectInputMode(mode) {
+    this.selected_input_mode = mode;
+
+    if(this.selected_input_mode == "SPLOM") {
+      this.splom_selected = true;
+    }
+    else {
+      this.splom_selected = false;
+    }
+
+    this.resetInputChart = this.resetInputChart == 0 ? 1 : 0;
   }
 
   visualize() {
     this.resetChart = this.resetChart == 0 ? 1 : 0;
+    this.resetInputChart = this.resetInputChart == 0 ? 1 : 0;
 
     this.data_parallel.length = 0
     this.data_lines_original.length = 0

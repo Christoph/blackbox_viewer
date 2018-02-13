@@ -68,11 +68,15 @@ export class parallelBarCharts {
 
     this.width = this.x_size - this.margin.left - this.margin.right;
     this.height = this.y_size - this.margin.top - this.margin.bottom;
+
+    if(!this.initialized) this.initChart()
+    if (this.data.length > 1) {
+      this.updateChart();
+    }
   }
 
   // Update the chart if the data changes
   dataMutated(splices) {
-    if(!this.initialized) this.initChart()
     this.updateChart();
   }
 
@@ -83,11 +87,14 @@ export class parallelBarCharts {
   }
 
   resetChanged() {
-    if(this.initialized) {
-      this.svg.remove()
-      this.dataMutated("")
-      this.initialized = false;
-    }
+    // if(this.initialized) {
+    //   this.svg.remove()
+    //   this.dataMutated("")
+    //   this.initialized = false;
+    // }
+    //
+    // this.initChart()
+    // this.updateChart();
   }
 
   // Remove the watcher after disposing the class
@@ -143,7 +150,6 @@ export class parallelBarCharts {
 
     this.parcoords =
       this.chart.append("g")
-
 
     this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
       .domain([0, 1])
@@ -314,7 +320,7 @@ export class parallelBarCharts {
 
     this.y_lines.domain(this.dimensions);
 
-    this.chart_height = (this.y_size - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.middle))/this.dimensions.length;
+    this.chart_height = (this.height - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.middle))/this.dimensions.length;
 
     this.line_data.length = 0
     this.dimensions.forEach((x, i) => {
@@ -409,8 +415,7 @@ export class parallelBarCharts {
         })
         .attr("x", 1)
         .attr("height", (d) => {
-          if(dim == "gamma") {
-          }
+          console.log(this.chart_height)
           return this.chart_height - this.y[dim](d.length); })
         .attr("width", (d) => {
           return this.x[dim](d.x0) - this.x[dim](d.x1) - 1;

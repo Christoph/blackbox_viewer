@@ -50,9 +50,9 @@
                 </li>
             </ul>
           </div>
-          <div  class="btn-group dropdown" aubs-dropdown="auto-close: 'Always'; on-toggle.call: toggled(state)">
+          <!-- <div  class="btn-group dropdown" aubs-dropdown="auto-close: 'Always'; on-toggle.call: toggled(state)">
             <button disabled.bind="data_not_loaded" class="btn btn-default dropdown-toggle" aubs-dropdown-toggle>
-                <strong>Burshing Mode:</strong> ${selected_mode}
+                <strong>Brushing Mode:</strong> ${selected_mode}
                 <span class="caret"></span>
             </button>
             <ul class="dropdown-menu dropdown-menu-left">
@@ -60,16 +60,34 @@
                   <a click.delegate="selectMode(mode)">${mode}</a>
                 </li>
             </ul>
+          </div> -->
+          <div  class="btn-group dropdown" aubs-dropdown="auto-close: 'Always'; on-toggle.call: toggled(state)">
+            <button disabled.bind="data_not_loaded" class="btn btn-default dropdown-toggle" aubs-dropdown-toggle>
+                <strong>Input Visualization:</strong> ${selected_input_mode}
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-left">
+                <li repeat.for="mode of input_modes">
+                  <a click.delegate="selectInputMode(mode)">${mode}</a>
+                </li>
+            </ul>
           </div>
           <button disabled.bind="dim_not_selected" class="btn btn-success" click.delegate="visualize()">Visualize</button>
 
-          <div style="width: 100%;">
-              <splom
+          <div style="width: 100%; height: 75vh">
+              <splom if.bind="splom_selected"
               brushing.bind="brushing_parallel"
               redraw.bind="redraw_parallel"
-              reset.bind="resetChart"
+              reset.bind="resetInputChart"
               data.bind="data_parallel"
               mode.bind="selected_mode"></splom>
+
+              <parallel-bar-charts if.bind="!splom_selected"
+              brushing.bind="brushing_parallel"
+              redraw.bind="redraw_parallel"
+              reset.bind="resetInputChart"
+              data.bind="data_parallel"
+              mode.bind="selected_mode"></parallel-bar-charts>
           </div>
         </div>
         <div class="col-md-6">
