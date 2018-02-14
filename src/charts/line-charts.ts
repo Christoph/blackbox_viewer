@@ -27,6 +27,7 @@ export class LineCharts {
   private initialized = false;
   private mouse_event;
   private svg;
+  private shadow_element;
   private dimensions;
   private charts;
   private x;
@@ -156,6 +157,17 @@ export class LineCharts {
     // Complete drawing area
     this.svg = d3.select(this.element)
       .append("svg")
+      .style("position", "absolute")
+      .style("top", 0)
+      .style("left", 0)
+      .attr("width", this.width + this.margin.left + this.margin.right)
+      .attr("height", this.height + this.margin.top + this.margin.bottom);
+
+    this.shadow_element = d3.select(this.element)
+      .append("custom")
+      .style("position", "absolute")
+      .style("top", 0)
+      .style("left", 0)
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom);
 
@@ -355,13 +367,6 @@ export class LineCharts {
 
         this.x_weight.set(dim , x_weight)
 
-        // define the line
-        let valueline = d3.line()
-          .x((d) => this.x(d[this.x_attribute]))
-          .y((d) => this.y.get(dim)(d[dim]));
-
-        this.valueline.set(dim, valueline)
-
         // Update axis
         linechart.selectAll(".xAxis")
           .call(d3.axisBottom(this.x));
@@ -373,12 +378,61 @@ export class LineCharts {
         focus.selectAll(".xAxis")
           .call(d3.axisBottom(this.focus_x.get(dim)).ticks(2));
 
-        this.charts.set(dim, {linechart: linechart, focus: focus})
+        let canvas = this.shadow_element.append('canvas')
+          .attr("width", this.lc_width)
+          .attr("height", this.lc_height)
+          .attr("transform",
+          "translate(" + this.margin.left + ", " + (this.margin.top + (this.focus_height + this.margin.y) * margin_iterator) + ")")
+
+        let context = canvas.node().getContext('2d');
+
+        this.charts.set(dim, {linechart: linechart, focus: focus, canvas: canvas, context: context})
 
         this.filters.set(dim, new Map())
+
+        // define the line
+        let valueline = d3.line()
+          .x((d) => this.x(d[this.x_attribute]))
+          .y((d) => this.y.get(dim)(d[dim]))
+          .context(this.charts.get(dim).context)
+
+        this.valueline.set(dim, valueline)
     })
 
     this.initialized = true;
+  }
+
+  bindData(dim) {
+    // let chart = this.charts.get(dim).canvas.selectAll("path.line")
+    let chart = this.shadow_element.selectAll("path.line")
+      .data(this.data)
+
+    chart.enter()
+      .append("path")
+      .attr("class", "line")
+
+    chart.exit().remove();
+  }
+
+  drawCanvas = (dim) => {
+    let self = this;
+    let context = this.charts.get(dim).context
+
+    // clear canvas
+    context.clearRect(0, 0, this.lc_width, this.lc_height);
+
+    // get all elements
+    let elements = this.shadow_element.selectAll('path.line');
+
+    // draw
+    elements.each(function(d, i) {
+      context.beginPath();
+      self.valueline.get(dim)(d["data"]);
+      context.lineWidth = 1.5;
+      context.strokeStyle = d["color"];
+      context.stroke();
+      context.closePath();
+    });
   }
 
   updateBars = (dim) => {
@@ -454,41 +508,22 @@ export class LineCharts {
         })
     }
     if(this.mode = "Opacity + Viridis") {
-      let chart = this.charts.get(dim).linechart.selectAll("path.line")
-        .data(this.data.filter( x => {
-          return x.highlight > 0;
-        }).sort(function(a, b) {
-          return d3.ascending(a.highlight, b.highlight)
-        }))
-
-      chart.enter()
-        .append("path")
-        .attr("class", "line")
-        .merge(chart)
-        .style("stroke", function(d) { return d.color })
-        .attr("d", (d) => this.valueline.get(dim)(d["data"]));
-
-      chart.exit().remove();
-
-      // this.charts.get(dim).focus.selectAll("rect.bar")
-      //   .attr("opacity", function(d) {
-      //     if(d.length < 1) {
-      //       return 0
-      //     }
-      //     if(d.x0 <= self.center + self.weight && d.x1 >= self.center - self.weight) return 1
-      //     return 0
-      //   })
-
-      // this.charts.get(dim).linechart.selectAll("path.line")
-      //   .style("stroke", function(d) {
-      //     // if(d.highlight <= 0) {
-      //     //   d3.select(this).attr("display", "none")
-      //     // }
-      //     // else {
-      //       return d.color
-      //     // }
+      this.drawCanvas(dim)
+      // let chart = this.charts.get(dim).linechart.selectAll("path.line")
+      //   .data(this.data.filter( x => {
+      //     return x.highlight > 0;
+      //   }).sort(function(a, b) {
+      //     return d3.ascending(a.highlight, b.highlight)
+      //   }))
       //
-      //   })
+      // chart.enter()
+      //   .append("path")
+      //   .attr("class", "line")
+      //   .merge(chart)
+      //   .style("stroke", function(d) { return d.color })
+      //   .attr("d", (d) => this.valueline.get(dim)(d["data"]));
+      //
+      // chart.exit().remove();
 
       this.charts.get(dim).focus.selectAll("rect.bar")
         .style("fill", function(d) {
@@ -558,20 +593,23 @@ export class LineCharts {
       this.x_weight.get(dim).range([0, (y_max - y_min)/2])
 
       // Select chart
-      let chart = this.charts.get(dim).linechart.selectAll("path.line")
-        .data(this.data.filter( x => {
-          return x.highlight > 0;
-        }).sort(function(a, b) {
-          return d3.ascending(a.highlight, b.highlight)
-        }))
+      // let chart = this.charts.get(dim).linechart.selectAll("path.line")
+      //   .data(this.data.filter( x => {
+      //     return x.highlight > 0;
+      //   }).sort(function(a, b) {
+      //     return d3.ascending(a.highlight, b.highlight)
+      //   }))
+      //
+      // chart.enter()
+      //   .append("path")
+      //   .attr("class", "line")
+      //   .merge(chart)
+      //   .attr("d", (d) => this.valueline.get(dim)(d["data"]));
+      //
+      // chart.exit().remove();
 
-      chart.enter()
-        .append("path")
-        .attr("class", "line")
-        .merge(chart)
-        .attr("d", (d) => this.valueline.get(dim)(d["data"]));
-
-      chart.exit().remove();
+      this.bindData(dim)
+      this.drawCanvas(dim)
 
       this.charts.get(dim).focus.selectAll(".bar").remove();
       let focus_chart = this.charts.get(dim).focus.selectAll("rect.bars")

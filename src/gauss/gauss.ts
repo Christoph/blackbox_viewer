@@ -135,13 +135,15 @@ export class Gauss {
   }
 
   private updateData() {
+    console.time("a")
     this.outFilter.set(this.brushing_lines.dim, {
       timestep: this.brushing_lines.timestep,
       scale: d3.scaleLinear()
         .domain([this.brushing_lines.center - this.brushing_lines.radius, this.brushing_lines.center, this.brushing_lines.center + this.brushing_lines.radius])
         .range([0.1, 1.1, 0.1])
     })
-
+    console.timeEnd("a")
+    console.time("b")
     // Set highlight and colors
     this.data_charts
       .forEach(x => {
@@ -164,6 +166,7 @@ export class Gauss {
           x.color = this.color_viridis(x.highlight)
         }
       })
+    console.timeEnd("b")
 
     this.redraw_lines = this.redraw_lines == 0 ? 1 : 0;
     this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
