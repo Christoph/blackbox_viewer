@@ -382,7 +382,6 @@ export class LineCharts {
   }
 
   updateBars = (dim) => {
-    console.log("update bars")
     let y_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[dim]))
     let y_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[dim]))
 
@@ -423,15 +422,11 @@ export class LineCharts {
       })
       .moveToBack();
 
-      if(this.filters.get(dim).size > 0) {
-        this.resolve_brushing(dim);
-      }
-
+      this.resolve_brushing(dim);
       this.updateHighlight(dim)
   }
 
   updateHighlight(dim) {
-    console.log("update highlight")
     let self = this;
     if(this.mode == "Opacity") {
       this.charts.get(dim).linechart.selectAll("path.line")
@@ -521,7 +516,6 @@ export class LineCharts {
   }
 
   updateBrush(dim) {
-    console.log("update brush")
     let line_data = this.getLine(dim);
 
     // Distribution line
@@ -532,7 +526,6 @@ export class LineCharts {
   }
 
   updateChart() {
-    console.log("update chart")
     // Update domains
     let x_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[this.x_attribute]))
     let x_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[this.x_attribute]))
