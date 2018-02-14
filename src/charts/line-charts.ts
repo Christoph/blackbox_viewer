@@ -425,14 +425,16 @@ export class LineCharts {
     let elements = this.shadow_element.selectAll('path.line');
 
     // draw
+    console.time(dim)
     elements.each(function(d, i) {
       context.beginPath();
       self.valueline.get(dim)(d["data"]);
       context.lineWidth = 1.5;
       context.strokeStyle = d["color"];
       context.stroke();
-      context.closePath();
+      // context.closePath();
     });
+    console.timeEnd(dim)
   }
 
   updateBars = (dim) => {
