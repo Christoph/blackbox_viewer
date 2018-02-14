@@ -141,6 +141,7 @@ export class LineCharts {
   }
 
   resolve_brushing(dim) {
+    console.log("resolve brushing")
     this.brushing = {
       center: this.center,
       radius: this.weight,
@@ -255,31 +256,36 @@ export class LineCharts {
           .on("drag", function(d) {
             if(d3.event.x >= 0 && d3.event.x <= self.lc_width) {
               d3.select(this).select("line")
-                .raise()
+                // .raise()
                 .attr("x1", d3.event.x)
                 .attr("x2", d3.event.x)
 
               d3.select(this).select("circle")
-                .raise()
+                // .raise()
                 .attr("cx", d3.event.x)
 
               d3.select(this).select("text")
-                .raise()
+                // .raise()
                 .attr("x", d3.event.x - 10)
             }
 
-              let closest = self.x_values.reduce(function(prev, curr) {
-                return (Math.abs(curr - self.x.invert(d3.event.x)) < Math.abs(prev - self.x.invert(d3.event.x)) ? curr : prev);
-              });
-
-              self.selected_time = closest
-
-              d3.select(this).select("text")
-                .text(self.selected_time)
-
-              self.updateBars(dim);
+            d3.select(this).select("text")
+              .text(Math.round(self.x.invert(d3.event.x)))
           })
-          .on('end', function() { d3.select(this).classed('active',false); });
+          .on('end', function() {
+            let closest = self.x_values.reduce(function(prev, curr) {
+              return (Math.abs(curr - self.x.invert(d3.event.x)) < Math.abs(prev - self.x.invert(d3.event.x)) ? curr : prev);
+            });
+
+            self.selected_time = closest
+
+            d3.select(this).select("text")
+              .text(self.selected_time)
+
+            self.updateBars(dim);
+
+            d3.select(this).classed('active',false);
+          });
 
         // Add time selection line
         let selector = linechart
@@ -376,6 +382,7 @@ export class LineCharts {
   }
 
   updateBars = (dim) => {
+    console.log("update bars")
     let y_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[dim]))
     let y_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[dim]))
 
@@ -424,6 +431,7 @@ export class LineCharts {
   }
 
   updateHighlight(dim) {
+    console.log("update highlight")
     let self = this;
     if(this.mode == "Opacity") {
       this.charts.get(dim).linechart.selectAll("path.line")
@@ -451,22 +459,39 @@ export class LineCharts {
         })
     }
     if(this.mode = "Opacity + Viridis") {
-      // this.charts.get(dim).linechart.selectAll("path.line")
+      let chart = this.charts.get(dim).linechart.selectAll("path.line")
+        .data(this.data.filter( x => {
+          return x.highlight > 0;
+        }))
+
+      chart.enter()
+        .append("path")
+        .attr("class", "line")
+        .merge(chart)
+        .style("stroke", function(d) { return d.color })
+        .attr("d", (d) => this.valueline.get(dim)(d["data"]));
+
+      chart.exit().remove();
+
+      // this.charts.get(dim).focus.selectAll("rect.bar")
       //   .attr("opacity", function(d) {
-      //     return d["highlight"]
+      //     if(d.length < 1) {
+      //       return 0
+      //     }
+      //     if(d.x0 <= self.center + self.weight && d.x1 >= self.center - self.weight) return 1
+      //     return 0
       //   })
 
-      this.charts.get(dim).focus.selectAll("rect.bar")
-        .attr("opacity", function(d) {
-          if(d.length < 1) return 0;
-          if(d.x0 <= self.center + self.weight && d.x1 >= self.center - self.weight) return 1
-          return 0
-        })
-
-      this.charts.get(dim).linechart.selectAll("path.line")
-        .style("stroke", function(d) {
-          return d.color
-        })
+      // this.charts.get(dim).linechart.selectAll("path.line")
+      //   .style("stroke", function(d) {
+      //     // if(d.highlight <= 0) {
+      //     //   d3.select(this).attr("display", "none")
+      //     // }
+      //     // else {
+      //       return d.color
+      //     // }
+      //
+      //   })
 
       this.charts.get(dim).focus.selectAll("rect.bar")
         .style("fill", function(d) {
@@ -494,6 +519,7 @@ export class LineCharts {
   }
 
   updateBrush(dim) {
+    console.log("update brush")
     let line_data = this.getLine(dim);
 
     // Distribution line
@@ -504,6 +530,7 @@ export class LineCharts {
   }
 
   updateChart() {
+    console.log("update chart")
     // Update domains
     let x_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[this.x_attribute]))
     let x_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[this.x_attribute]))
@@ -536,9 +563,19 @@ export class LineCharts {
       this.x_weight.get(dim).range([0, (y_max - y_min)/2])
 
       // Select chart
-      this.charts.get(dim).linechart.selectAll("path.line").remove();
+      // this.charts.get(dim).linechart.selectAll("path.line").remove();
       let chart = this.charts.get(dim).linechart.selectAll("path.line")
-        .data(this.data)
+        .data(this.data.filter( x => {
+          return x.highlight > 0;
+        }))
+
+      chart.enter()
+        .append("path")
+        .attr("class", "line")
+        .merge(chart)
+        .attr("d", (d) => this.valueline.get(dim)(d["data"]));
+
+      chart.exit().remove();
 
       this.charts.get(dim).focus.selectAll(".bar").remove();
       let focus_chart = this.charts.get(dim).focus.selectAll("rect.bars")
@@ -554,14 +591,6 @@ export class LineCharts {
         .call(d3.axisRight(this.y.get(dim)));
       this.charts.get(dim).focus.selectAll(".xAxis")
         .call(d3.axisBottom(this.focus_x.get(dim)).ticks(2));
-
-      // Linechart
-      chart.exit().remove();
-
-      chart.enter()
-        .append("path")
-        .attr("class", "line")
-        .attr("d", (d) => this.valueline.get(dim)(d["data"]));
 
       // Barchart
       // Remove bars
