@@ -462,6 +462,8 @@ export class LineCharts {
       let chart = this.charts.get(dim).linechart.selectAll("path.line")
         .data(this.data.filter( x => {
           return x.highlight > 0;
+        }).sort(function(a, b) {
+          return d3.ascending(a.highlight, b.highlight)
         }))
 
       chart.enter()
@@ -563,10 +565,11 @@ export class LineCharts {
       this.x_weight.get(dim).range([0, (y_max - y_min)/2])
 
       // Select chart
-      // this.charts.get(dim).linechart.selectAll("path.line").remove();
       let chart = this.charts.get(dim).linechart.selectAll("path.line")
         .data(this.data.filter( x => {
           return x.highlight > 0;
+        }).sort(function(a, b) {
+          return d3.ascending(a.highlight, b.highlight)
         }))
 
       chart.enter()
