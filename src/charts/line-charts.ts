@@ -140,77 +140,13 @@ export class LineCharts {
     return data
   }
 
-  // resetFilter(dim) {
-  //   this.charts.get(dim).focus.selectAll("path.focusline").remove();
-  //   let out = new Map()
-  //   this.filters.set(dim, new Map())
-  //
-  //   // Update average filter
-  //   this.filters.forEach((v, k) => {
-  //     if(v.size > 0) {
-  //       v.forEach((iv, ik) => {
-  //         if(out.has(ik)) {
-  //           let value = out.get(ik)
-  //
-  //           out.set(ik, (value + iv)/2)
-  //         }
-  //         else {
-  //           out.set(ik, iv)
-  //         }
-  //       })
-  //     }
-  //   })
-  //
-  //   this.brushing = out;
-  // }
-
   resolve_brushing(dim) {
-    let out = new Map()
-    let temp = new Map()
-
-    this.data.forEach(d => {
-      if(d.data[this.selected_time][dim] >= this.center-this.weight &&
-      d.data[this.selected_time][dim] <= this.center+this.weight) {
-        if(d.data[this.selected_time][dim] < this.center) {
-          temp.set(
-            d["id"],
-            this.weight_to_highlight(d.data[this.selected_time][dim] - (this.center - this.weight))
-          )
-        }
-        else {
-          temp.set(
-            d["id"],
-            this.weight_to_highlight(Math.abs(d.data[this.selected_time][dim] - (this.center + this.weight)))
-          )
-        }
-      }
-      else {
-        temp.set(
-          d["id"],
-          0
-        )
-      }
-    })
-
-    this.filters.set(dim, temp)
-
-    // Update average filter
-    this.filters.forEach((v, k) => {
-      if(v.size > 0) {
-        v.forEach((iv, ik) => {
-          if(out.has(ik)) {
-            let value = out.get(ik)
-
-            out.set(ik, (value + iv)/2)
-          }
-          else {
-            out.set(ik, iv)
-          }
-        })
-      }
-    })
-
-    this.brushing = out;
+    this.brushing = {
+      center: this.center,
+      radius: this.weight,
+      dim: dim,
+      timestep: this.selected_time
+    }
   }
 
   initChart() {
@@ -242,40 +178,23 @@ export class LineCharts {
 
     this.lineGenerator = d3.line();
 
-    this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
-      .domain([0, 1])
-    this.color_plasma = d3.scaleSequential(d3.interpolatePlasma)
-      .domain([0, 1])
-
-    this.quantize = d3.scaleQuantize()
-      .domain([0,1])
-      .range([
-        this.color_viridis(0),
-        this.color_viridis(0.25),
-        this.color_viridis(0.5),
-        this.color_viridis(0.75),
-        this.color_viridis(1),
-      ]);
-
-    this.quantize_opacity = d3.scaleQuantize()
-      .domain([0,1])
-      .range([0.1, 0.35, 0.7, 0.9, 1]);
-
     this.weight_to_highlight = d3.scaleLinear()
       .range([0,1])
 
     // Create initial chart areas
     let margin_iterator = 0;
     this.dimensions.map((dim) => {
+      let brushing = false;
       function updateBrushing(d) {
-        self.center = self.y.get(dim).invert(d3.mouse(this)[1]);
-        self.weight = self.x_weight.get(dim)(d3.mouse(this)[0]);
+        if(brushing && d3.event) {
+          self.center = self.y.get(dim).invert(d3.mouse(this)[1]);
+          self.weight = self.x_weight.get(dim)(d3.mouse(this)[0]);
 
-        self.weight_to_highlight.domain([0, self.weight])
+          self.weight_to_highlight.domain([0, self.weight])
 
-        self.updateBrush(dim);
-
-        self.resolve_brushing(dim);
+          self.updateBrush(dim);
+          self.resolve_brushing(dim);
+        }
       }
 
       // Linechart area
@@ -304,19 +223,18 @@ export class LineCharts {
 
           self.weight_to_highlight.domain([0, self.weight])
 
-          self.createBrush(dim); // 2
-          self.updateBrush(dim); // 0
+          self.createBrush(dim);
+          self.updateBrush(dim);
+          self.resolve_brushing(dim);
 
-          self.resolve_brushing(dim); // 4
-
-          self.mouse_event = d3.select(this)
-            .on("mousemove", _.throttle(updateBrushing, 50))
-            .on("mouseup", function(d) {
-              self.mouse_event.on("mousemove", null).on("mouseup", null);
-            })
-            .on("mouseleave", function(d) {
-              self.mouse_event.on("mousemove", null).on("mouseleave", null);
-            })
+          brushing = true;
+        })
+        .on("mousemove", _.throttle(updateBrushing, 50))
+        .on("mouseup", function(d) {
+          brushing = false;
+        })
+        .on("mouseleave", function(d) {
+          brushing = false;
         })
         .moveToFront()
 
@@ -507,7 +425,6 @@ export class LineCharts {
 
   updateHighlight(dim) {
     let self = this;
-
     if(this.mode == "Opacity") {
       this.charts.get(dim).linechart.selectAll("path.line")
         .attr("opacity", function(d) {
@@ -533,107 +450,27 @@ export class LineCharts {
           return opacity / counter
         })
     }
-    else if(this.mode = "Opacity + Viridis") {
-      this.charts.get(dim).linechart.selectAll("path.line")
+    if(this.mode = "Opacity + Viridis") {
+      // this.charts.get(dim).linechart.selectAll("path.line")
+      //   .attr("opacity", function(d) {
+      //     return d["highlight"]
+      //   })
+
+      this.charts.get(dim).focus.selectAll("rect.bar")
         .attr("opacity", function(d) {
-          // return d["highlight"]
-
-          if(d["highlight"] > 0) return self.quantize_opacity(d["highlight"])
-          else return 0
-        })
-
-      this.charts.get(dim).focus.selectAll("rect.bar")
-        .attr("opacity", function(b) {
-          let opacity = 0;
-          let counter = 0;
-
-          self.data.forEach((d: any[]) => {
-            let value = d["data"][self.selected_time][dim];
-
-            if(value >= b.x0 && value <= b.x1) {
-              counter++;
-              opacity += d["highlight"]
-            }
-          })
-
-          if(b.length < 1) return 0;
-
-          if(opacity > 0) return self.quantize_opacity(opacity / counter)
-          else return 0
+          if(d.length < 1) return 0;
+          if(d.x0 <= self.center + self.weight && d.x1 >= self.center - self.weight) return 1
+          return 0
         })
 
       this.charts.get(dim).linechart.selectAll("path.line")
         .style("stroke", function(d) {
-          return self.quantize(d["highlight"])
+          return d.color
         })
 
       this.charts.get(dim).focus.selectAll("rect.bar")
-        .style("fill", function(b) {
-          let opacity = 0;
-          let counter = 0;
-
-          self.data.forEach((d: any[]) => {
-            let value = d["data"][self.selected_time][dim];
-
-            if(value >= b.x0 && value <= b.x1) {
-              counter++;
-              opacity += d["highlight"]
-            }
-          })
-
-          if(b.length < 1) return 0;
-
-          return self.quantize(opacity / counter)
-        })
-    }
-    else if(this.mode = "Color-Viridis") {
-      this.charts.get(dim).linechart.selectAll("path.line")
-        .style("stroke", function(d) {
-          return self.color_viridis(d["highlight"])
-        })
-
-      this.charts.get(dim).focus.selectAll("rect.bar")
-        .style("fill", function(b) {
-          let opacity = 0;
-          let counter = 0;
-
-          self.data.forEach((d: any[]) => {
-            let value = d["data"][self.selected_time][dim];
-
-            if(value >= b.x0 && value <= b.x1) {
-              counter++;
-              opacity += d["highlight"]
-            }
-          })
-
-          if(b.length < 1) return 0;
-
-          return self.color_viridis(opacity / counter)
-        })
-    }
-    else if(this.mode = "Color-Plasma") {
-      this.charts.get(dim).linechart.selectAll("path.line")
-        .style("stroke", function(d) {
-          return self.color_plasma(d["highlight"])
-        })
-
-      this.charts.get(dim).focus.selectAll("rect.bar")
-        .style("fill", function(b) {
-          let opacity = 0;
-          let counter = 0;
-
-          self.data.forEach((d: any[]) => {
-            let value = d["data"][self.selected_time][dim];
-
-            if(value >= b.x0 && value <= b.x1) {
-              opacity += d["highlight"]
-              counter++;
-            }
-          })
-
-          if(b.length < 1) return 0;
-
-          return self.color_plasma(opacity / counter)
+        .style("fill", function(d) {
+          return d.color
         })
     }
   }
@@ -652,6 +489,8 @@ export class LineCharts {
       .attr("fill", "none")
       .attr("d", this.lineGenerator)
       .moveToFront();
+
+
   }
 
   updateBrush(dim) {
