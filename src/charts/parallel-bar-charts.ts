@@ -123,7 +123,7 @@ export class parallelBarCharts {
 
   // Update external variables with current brushes
   private getBrushing = (dim, low, high) => {
-    let brushed_elements = this.data.filter(x => x["data"][dim] >= low && x["data"][dim] <= high).map(x => x.id)
+    let brushed_elements = this.data.filter(x => x["params"][dim] >= low && x["params"][dim] <= high).map(x => x.id)
     this.brushes.set(dim, brushed_elements)
 
     let brushed = _.intersection(...Array.from(this.brushes.values()));
@@ -191,7 +191,7 @@ export class parallelBarCharts {
             let counter = 0;
 
             self.data.forEach((d) => {
-              let value = d["data"][dim];
+              let value = d["params"][dim];
 
               if(value >= bar.x0 && value <= bar.x1) {
                 counter++;
@@ -243,7 +243,7 @@ export class parallelBarCharts {
               let counter = 0;
 
               self.data.forEach((d) => {
-                let value = d["data"][dim];
+                let value = d["params"][dim];
 
                 if(value >= bar.x0 && value <= bar.x1) {
                   counter++;
@@ -274,7 +274,7 @@ export class parallelBarCharts {
             let counter = 0;
 
             self.data.forEach((d) => {
-              let value = d["data"][dim];
+              let value = d["params"][dim];
 
               if(value >= bar.x0 && value <= bar.x1) {
                 counter++;
@@ -294,7 +294,7 @@ export class parallelBarCharts {
             let counter = 0;
 
             self.data.forEach((d) => {
-              let value = d["data"][dim];
+              let value = d["params"][dim];
 
               if(value >= bar.x0 && value <= bar.x1) {
                 counter++;
@@ -315,7 +315,7 @@ export class parallelBarCharts {
 
     // Get current dataset dimensions: Keys of the map
     if (this.data.length > 0) {
-      this.dimensions = d3.keys(this.data[0]["data"]);
+      this.dimensions = d3.keys(this.data[0]["params"]);
     }
 
     this.y_lines.domain(this.dimensions);
@@ -348,14 +348,14 @@ export class parallelBarCharts {
     // Currently only linear values
     this.dimensions.map((dim) => {
       let ext = <any>d3.extent(this.data, (data) => {
-        return data["data"][dim];
+        return data["params"][dim];
       })
 
       this.x[dim] = d3.scaleLinear()
         .range([this.width, 0])
         .domain([ext[0], ext[1]])
 
-      let focus_data = this.data.map(a => a["data"][dim])
+      let focus_data = this.data.map(a => a["params"][dim])
 
       this.bins[dim] = d3.histogram()
         .domain(this.x[dim].domain())
@@ -475,7 +475,7 @@ export class parallelBarCharts {
       .enter().append("path")
       .attr("class", "line")
       .attr("d", (d) => {
-        return this.path(d["data"])
+        return this.path(d["params"])
       })
       .moveToBack()
   }

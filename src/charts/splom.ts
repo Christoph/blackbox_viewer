@@ -218,18 +218,18 @@ export class Splom {
         cell.selectAll("circle")
             .style("fill", function(d) {
               if(d["highlight"] <= 0) return "white"
-              else return self.quantize(d["highlight"]);
+              else return d["color"];
             });
       });
   }
 
   updateChart() {
       let self = this;
-      let traits = d3.keys(this.data[0]["data"])
+      let traits = d3.keys(this.data[0]["params"])
       let n = traits.length;
 
       traits.forEach(function(trait) {
-        self.domainByTrait[trait] = d3.extent(self.data, function(d) { return d["data"][trait]; });
+        self.domainByTrait[trait] = d3.extent(self.data, function(d) { return d["params"][trait]; });
       });
 
       this.size = (this.width - ((n-1) * this.margin.padding)) / n;
@@ -319,8 +319,8 @@ export class Splom {
             cell.selectAll("circle")
                 .data(self.data)
               .enter().append("circle")
-                .attr("cx", function(d) { return self.x(d["data"][p.x]); })
-                .attr("cy", function(d) { return self.y(d["data"][p.y]); })
+                .attr("cx", function(d) { return self.x(d["params"][p.x]); })
+                .attr("cy", function(d) { return self.y(d["params"][p.y]); })
                 .attr("r", 3)
                 .style("fill", function(d) { return "steelblue"; });
           });
