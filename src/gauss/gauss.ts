@@ -1,8 +1,7 @@
 import { autoinject, observable } from 'aurelia-framework';
 import * as d3 from "d3"
+import * as PIXI from "pixi.js"
 import {exampleData} from "../resources/example-data"
-
-declare var PIXI: any;
 
 @autoinject
 export class Gauss {
@@ -96,7 +95,11 @@ export class Gauss {
     this.resetInputChart = this.resetInputChart == 0 ? 1 : 0;
   }
 
-  app = new PIXI.Application(500, 300, { backgroundColor: 0x1099bb });
+  app = new PIXI.Application({
+    width: 500,
+    height: 300,
+    transparent: true
+  });
 
   scale_x = d3.scaleLinear()
     .range([0, 500])
@@ -141,8 +144,6 @@ export class Gauss {
       this.app.stage.addChild(line);
     })
 
-    //Start the loop
-    // this.gameLoop();
     console.timeEnd("webgl")
 
     this.resetChart = this.resetChart == 0 ? 1 : 0;
