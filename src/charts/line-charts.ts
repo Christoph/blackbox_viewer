@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import * as _ from "lodash";
+import * as PIXI from "pixi.js";
 import { inject, noView, bindable, bindingMode, BindingEngine } from 'aurelia-framework';
 
 @inject(Element, BindingEngine)
@@ -378,15 +379,36 @@ export class LineCharts {
         focus.selectAll(".xAxis")
           .call(d3.axisBottom(this.focus_x.get(dim)).ticks(2));
 
-        let canvas = this.shadow_element.append('canvas')
+        // Webgl parts
+        var foreignObject = linechart.append("foreignObject")
           .attr("width", this.lc_width)
           .attr("height", this.lc_height)
-          .attr("transform",
-          "translate(" + this.margin.left + ", " + (this.margin.top + (this.focus_height + this.margin.y) * margin_iterator) + ")")
 
-        let context = canvas.node().getContext('2d');
+        // add embedded body to foreign object
+        var foBody = foreignObject.append("xhtml:body")
+          .style("margin", "0px")
+          .style("padding", "0px")
+          .style("background-color", "none")
+          .style("width", this.lc_width + "px")
+          .style("height", this.lc_height + "px")
 
-        this.charts.set(dim, {linechart: linechart, focus: focus, canvas: canvas, context: context})
+        var canvas = foBody.append("canvas")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("width", this.lc_width)
+          .attr("height", this.lc_height)
+          .attr("mouse_event", "none")
+
+
+        // let canvas = this.shadow_element.append('canvas')
+        //   .attr("width", this.lc_width)
+        //   .attr("height", this.lc_height)
+        //   .attr("transform",
+        //   "translate(" + this.margin.left + ", " + (this.margin.top + (this.focus_height + this.margin.y) * margin_iterator) + ")")
+        //
+        // let context = canvas.node().getContext('2d');
+
+        this.charts.set(dim, {linechart: linechart, focus: focus, canvas: null, context: null})
 
         this.filters.set(dim, new Map())
 
@@ -610,8 +632,8 @@ export class LineCharts {
       //
       // chart.exit().remove();
 
-      this.bindData(dim)
-      this.drawCanvas(dim)
+      // this.bindData(dim)
+      // this.drawCanvas(dim)
 
       this.charts.get(dim).focus.selectAll(".bar").remove();
       let focus_chart = this.charts.get(dim).focus.selectAll("rect.bars")
