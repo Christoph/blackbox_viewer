@@ -28,6 +28,7 @@ export class LineCharts {
   private initialized = false;
   private mouse_event;
   private svg;
+  private app;
   private shadow_element;
   private dimensions;
   private charts;
@@ -156,16 +157,20 @@ export class LineCharts {
     let self = this;
 
     // Complete drawing area
-    this.svg = d3.select(this.element)
-      .append("svg")
+    let canvas = d3.select(this.element)
+      .append("canvas")
       .style("position", "absolute")
       .style("top", 0)
       .style("left", 0)
-      .attr("width", this.width + this.margin.left + this.margin.right)
-      .attr("height", this.height + this.margin.top + this.margin.bottom);
 
-    this.shadow_element = d3.select(this.element)
-      .append("custom")
+      this.app = new PIXI.Application({
+        view: canvas.node(),
+        width: this.width  + this.margin.left + this.margin.right,
+        height: this.height + this.margin.top + this.margin.bottom
+      });
+
+    this.svg = d3.select(this.element)
+      .append("svg")
       .style("position", "absolute")
       .style("top", 0)
       .style("left", 0)
@@ -393,26 +398,24 @@ export class LineCharts {
           .call(d3.axisBottom(this.focus_x.get(dim)).ticks(2));
 
         // Webgl parts
-        var foreignObject = linechart.append("foreignObject")
-          .attr("width", this.lc_width)
-          .attr("height", this.lc_height)
+        let container = new PIXI.Container()
 
-        // add embedded body to foreign object
-        var foBody = foreignObject.append("xhtml:body")
-          .style("margin", "0px")
-          .style("padding", "0px")
-          .style("background-color", "none")
-          .style("width", this.lc_width + "px")
-          .style("height", this.lc_height + "px")
+        container.position.x = this.margin.left
+        container.position.y = this.margin.top + (this.focus_height + this.margin.y) * margin_iterator
 
-        var canvas = foBody.append("canvas")
-          .attr("x", 0)
-          .attr("y", 0)
-          .attr("width", this.lc_width)
-          .attr("height", this.lc_height)
-          .attr("mouse_event", "none")
+        this.app.stage.addChild(container);
 
-        this.charts.set(dim, {linechart: linechart, focus: focus, canvas: canvas})
+        // let graphics = new PIXI.Graphics();
+        // graphics.beginFill(0x2c3e50);
+        // graphics.drawRect(0, 0, 75, 50);
+        // graphics.drawRect(50, 50, 75, 50);
+        // graphics.endFill();
+        //
+        // container.addChild(graphics)
+        //
+        // console.log(dim, container)
+
+        this.charts.set(dim, {linechart: linechart, focus: focus, container: container})
 
         this.filters.set(dim, new Map())
 
