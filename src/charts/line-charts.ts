@@ -34,6 +34,7 @@ export class LineCharts {
   private charts;
   private x;
   private y = new Map();
+  private y_gl = new Map();
   private focus_x = new Map();
   private valueline = new Map();
   private filters = new Map()
@@ -166,7 +167,9 @@ export class LineCharts {
       this.app = new PIXI.Application({
         view: canvas.node(),
         width: this.width  + this.margin.left + this.margin.right,
-        height: this.height + this.margin.top + this.margin.bottom
+        height: this.height + this.margin.top + this.margin.bottom,
+        transparent: true,
+        antialias: true
       });
 
     this.svg = d3.select(this.element)
@@ -241,8 +244,6 @@ export class LineCharts {
         .append("g")
         .attr("transform",
         "translate(" + this.focus_offset + ", " + (this.margin.top + (this.focus_height + this.margin.y) * margin_iterator) + ")")
-
-      margin_iterator++;
 
       focus
         .append("rect")
@@ -376,6 +377,11 @@ export class LineCharts {
 
         this.y.set(dim, y)
 
+        let y_gl = d3.scaleLinear()
+          .range([this.lc_height, 0]);
+
+        this.y_gl.set(dim, y_gl)
+
         let focus_x = d3.scaleLinear()
           .range([0, this.focus_width]);
 
@@ -405,27 +411,10 @@ export class LineCharts {
 
         this.app.stage.addChild(container);
 
-        // let graphics = new PIXI.Graphics();
-        // graphics.beginFill(0x2c3e50);
-        // graphics.drawRect(0, 0, 75, 50);
-        // graphics.drawRect(50, 50, 75, 50);
-        // graphics.endFill();
-        //
-        // container.addChild(graphics)
-        //
-        // console.log(dim, container)
-
         this.charts.set(dim, {linechart: linechart, focus: focus, container: container})
-
         this.filters.set(dim, new Map())
 
-        // define the line
-        let valueline = d3.line()
-          .x((d) => this.x(d[this.x_attribute]))
-          .y((d) => this.y.get(dim)(d[dim]))
-          .context(this.charts.get(dim).context)
-
-        this.valueline.set(dim, valueline)
+        margin_iterator++;
     })
 
     this.initialized = true;
@@ -521,6 +510,13 @@ export class LineCharts {
       //
       // chart.exit().remove();
 
+
+
+      this.charts.get(dim).container.children.forEach(x => {
+        console.log(x)
+        x.tint = 0x000000;
+      })
+
       this.charts.get(dim).focus.selectAll("rect.bar")
         .style("fill", function(b) {
           let opacity = 0;
@@ -578,6 +574,7 @@ export class LineCharts {
       return d[this.x_attribute]
     })
 
+    // Per dimension calls
     this.dimensions.map((dim) => {
       let y_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[dim]))
       let y_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[dim]))
@@ -590,6 +587,7 @@ export class LineCharts {
       })
 
       this.y.get(dim).domain([y_min, y_max]);
+      this.y_gl.get(dim).domain([y_min, y_max])
 
       this.bins = d3.histogram()
         .domain(this.y.get(dim).domain())
@@ -650,6 +648,20 @@ export class LineCharts {
           return this.y.get(dim)(d.x0) - this.y.get(dim)(d.x1) - 1;
         })
         .moveToBack();
+    })
+
+    this.data.forEach(d => {
+      this.dimensions.forEach(dim => {
+        let line = new PIXI.Graphics();
+        line.lineStyle(1, 0x4682b4, 1);
+
+        for(let i = 0; i < d["data"].length-1; i++) {
+          line.moveTo(this.x(d["data"][i][this.x_attribute]),this.y_gl.get(dim)(d["data"][i][dim]));
+          line.lineTo(this.x(d["data"][i+1][this.x_attribute]),this.y_gl.get(dim)(d["data"][i+1][dim]));
+        }
+
+        this.charts.get(dim).container.addChild(line);
+      })
     })
   }
 }
