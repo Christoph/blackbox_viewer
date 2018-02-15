@@ -165,6 +165,8 @@ export class Gauss {
         }
       })
 
+    console.timeEnd("forEach")
+
     this.redraw_lines = this.redraw_lines == 0 ? 1 : 0;
     this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
   }

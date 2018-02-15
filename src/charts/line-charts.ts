@@ -102,9 +102,11 @@ export class LineCharts {
 
   redrawChanged() {
     if (this.data.length > 1) {
+      console.time("redraw")
       this.dimensions.forEach((dim) => {
         this.updateHighlight(dim);
       })
+      console.timeEnd("redraw")
     }
   }
 
@@ -141,7 +143,6 @@ export class LineCharts {
   }
 
   resolve_brushing(dim) {
-    console.log("resolve brushing")
     this.brushing = {
       center: this.center,
       radius: this.weight,
@@ -224,20 +225,23 @@ export class LineCharts {
 
           self.weight_to_highlight.domain([0, self.weight])
 
+          console.time("mouse down")
           self.createBrush(dim);
           self.updateBrush(dim);
           self.resolve_brushing(dim);
+          console.timeEnd("mouse down")
 
           brushing = true;
         })
         .on("mousemove", _.throttle(updateBrushing, 50))
         .on("mouseup", function(d) {
           brushing = false;
+          console.log("mouse up")
         })
         .on("mouseleave", function(d) {
           brushing = false;
         })
-        .moveToFront()
+        // .moveToFront()
 
         // add the x Axis
         linechart.append("g")
@@ -429,72 +433,70 @@ export class LineCharts {
   updateHighlight(dim) {
     let self = this;
     if(this.mode == "Opacity") {
-      this.charts.get(dim).linechart.selectAll("path.line")
-        .attr("opacity", function(d) {
-          return d["highlight"]
-        })
-
-      this.charts.get(dim).focus.selectAll("rect.bar")
-        .attr("opacity", function(b) {
-          let opacity = 0;
-          let counter = 0;
-
-          self.data.forEach((d: any[]) => {
-            let value = d["data"][self.selected_time][dim];
-
-            if(value >= b.x0 && value <= b.x1) {
-              counter++;
-              opacity += d["highlight"]
-            }
-          })
-
-          if(b.length < 1) return 0;
-
-          return opacity / counter
-        })
+      // this.charts.get(dim).linechart.selectAll("path.line")
+      //   .attr("opacity", function(d) {
+      //     return d["highlight"]
+      //   })
+      //
+      // this.charts.get(dim).focus.selectAll("rect.bar")
+      //   .attr("opacity", function(b) {
+      //     let opacity = 0;
+      //     let counter = 0;
+      //
+      //     self.data.forEach((d: any[]) => {
+      //       let value = d["data"][self.selected_time][dim];
+      //
+      //       if(value >= b.x0 && value <= b.x1) {
+      //         counter++;
+      //         opacity += d["highlight"]
+      //       }
+      //     })
+      //
+      //     if(b.length < 1) return 0;
+      //
+      //     return opacity / counter
+      //   })
     }
     if(this.mode = "Opacity + Viridis") {
-      let chart = this.charts.get(dim).linechart.selectAll("path.line")
-        .data(this.data.filter( x => {
-          return x.highlight > 0;
-        }).sort(function(a, b) {
+      // let chart = this.charts.get(dim).linechart.selectAll("path.line")
+      //   .data(this.data.filter( x => {
+      //     return x.highlight > 0;
+      //   }).sort(function(a, b) {
+      //     return d3.ascending(a.highlight, b.highlight)
+      //   }))
+
+      console.time("draw")
+      // chart.enter()
+      //   .append("path")
+      //   .attr("class", "line")
+      //   .merge(chart)
+      //   .style("stroke", function(d) { return d.color })
+      //   .attr("d", (d) => this.valueline.get(dim)(d["data"]));
+      //
+      // chart.exit().remove();
+
+      this.charts.get(dim).linechart.selectAll("path.line")
+        .sort(function(a, b) {
           return d3.ascending(a.highlight, b.highlight)
-        }))
+        })
+        .attr("opacity", function(d) {
+          if(d["highlight"] == 0) return 0.25
+          else 1
+        })
+        .style("stroke", function(d) {
+          if(d["highlight"] == 0) return "#d3d3d3"
+          else return d["color"]
+        })
 
-      chart.enter()
-        .append("path")
-        .attr("class", "line")
-        .merge(chart)
-        .style("stroke", function(d) { return d.color })
-        .attr("d", (d) => this.valueline.get(dim)(d["data"]));
-
-      chart.exit().remove();
+      console.timeEnd("draw")
 
       // this.charts.get(dim).focus.selectAll("rect.bar")
-      //   .attr("opacity", function(d) {
-      //     if(d.length < 1) {
-      //       return 0
-      //     }
-      //     if(d.x0 <= self.center + self.weight && d.x1 >= self.center - self.weight) return 1
-      //     return 0
+      //   .style("fill", function(d) {
+      //     return d.color
       //   })
-
-      // this.charts.get(dim).linechart.selectAll("path.line")
-      //   .style("stroke", function(d) {
-      //     // if(d.highlight <= 0) {
-      //     //   d3.select(this).attr("display", "none")
-      //     // }
-      //     // else {
-      //       return d.color
-      //     // }
-      //
-      //   })
-
-      this.charts.get(dim).focus.selectAll("rect.bar")
-        .style("fill", function(d) {
-          return d.color
-        })
     }
+
+    console.log("highlight done")
   }
 
   createBrush(dim) {
@@ -511,8 +513,6 @@ export class LineCharts {
       .attr("fill", "none")
       .attr("d", this.lineGenerator)
       .moveToFront();
-
-
   }
 
   updateBrush(dim) {
@@ -541,6 +541,7 @@ export class LineCharts {
 
       this.selected_time = x_max;
 
+      console.log("UPDATE")
       let focus_data = <any>[];
       this.data.forEach((d: any[]) => {
         focus_data.push(d["data"][this.selected_time][dim])
