@@ -29,7 +29,8 @@ export class LineCharts {
   private mouse_event;
   private svg;
   private app;
-  private shadow_element;
+  private line_id = new Map();
+  private id_color = new Map();
   private dimensions;
   private charts;
   private x;
@@ -106,6 +107,10 @@ export class LineCharts {
 
   redrawChanged() {
     if (this.data.length > 1) {
+      this.data.forEach(d => {
+        this.id_color.set(d["id"], d["color"])
+      })
+
       this.dimensions.forEach((dim) => {
         this.updateHighlight(dim);
       })
@@ -145,7 +150,6 @@ export class LineCharts {
   }
 
   resolve_brushing(dim) {
-    console.log("resolve brushing")
     this.brushing = {
       center: this.center,
       radius: this.weight,
@@ -184,6 +188,11 @@ export class LineCharts {
     this.dimensions = d3.keys(this.data[0]["data"][0]).filter((d) => {
       return d != this.x_attribute
     });
+
+    // Initialize id color Map
+    this.dimensions.forEach(dim => {
+      this.line_id.set(dim, new Map())
+    })
 
     // Set height value
     this.lc_height = (this.y_size - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.y))/this.dimensions.length;
@@ -493,28 +502,17 @@ export class LineCharts {
         })
     }
     if(this.mode = "Opacity + Viridis") {
-      // this.drawCanvas(dim)
-      // let chart = this.charts.get(dim).linechart.selectAll("path.line")
-      //   .data(this.data.filter( x => {
-      //     return x.highlight > 0;
-      //   }).sort(function(a, b) {
-      //     return d3.ascending(a.highlight, b.highlight)
-      //   }))
-      //
-      // chart.enter()
-      //   .append("path")
-      //   .attr("class", "line")
-      //   .merge(chart)
-      //   .style("stroke", function(d) { return d.color })
-      //   .attr("d", (d) => this.valueline.get(dim)(d["data"]));
-      //
-      // chart.exit().remove();
-
-
-
       this.charts.get(dim).container.children.forEach(x => {
-        console.log(x)
-        x.tint = 0x000000;
+        let color = this.id_color.get(this.line_id.get(dim).get(x))
+
+        if(color == "none") {
+          x.alpha = 0.1;
+          x.tint = 0x171717
+        }
+        else {
+          x.alpha = 1;
+          x.tint = parseInt(color.substring(1), 16);
+        }
       })
 
       this.charts.get(dim).focus.selectAll("rect.bar")
@@ -598,25 +596,6 @@ export class LineCharts {
 
       this.x_weight.get(dim).range([0, (y_max - y_min)/2])
 
-      // Select chart
-      // let chart = this.charts.get(dim).linechart.selectAll("path.line")
-      //   .data(this.data.filter( x => {
-      //     return x.highlight > 0;
-      //   }).sort(function(a, b) {
-      //     return d3.ascending(a.highlight, b.highlight)
-      //   }))
-      //
-      // chart.enter()
-      //   .append("path")
-      //   .attr("class", "line")
-      //   .merge(chart)
-      //   .attr("d", (d) => this.valueline.get(dim)(d["data"]));
-      //
-      // chart.exit().remove();
-
-      // this.bindData(dim)
-      // this.drawCanvas(dim)
-
       this.charts.get(dim).focus.selectAll(".bar").remove();
       let focus_chart = this.charts.get(dim).focus.selectAll("rect.bars")
         .data(this.bins)
@@ -661,6 +640,7 @@ export class LineCharts {
         }
 
         this.charts.get(dim).container.addChild(line);
+        this.line_id.get(dim).set(line, d["id"])
       })
     })
   }
