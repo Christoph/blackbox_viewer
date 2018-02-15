@@ -186,6 +186,19 @@ export class LineCharts {
     // Reset charts map
     this.charts = new Map();
 
+    this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
+      .domain([0, 1])
+
+    this.quantize = d3.scaleQuantize()
+        .domain([0, 1])
+        .range([
+          this.color_viridis(0.2),
+          this.color_viridis(0.4),
+          this.color_viridis(0.6),
+          this.color_viridis(0.8),
+          this.color_viridis(1),
+        ])
+
     // for all charts
     this.x = d3.scaleLinear()
       .range([0, this.lc_width]);
@@ -399,16 +412,7 @@ export class LineCharts {
           .attr("height", this.lc_height)
           .attr("mouse_event", "none")
 
-
-        // let canvas = this.shadow_element.append('canvas')
-        //   .attr("width", this.lc_width)
-        //   .attr("height", this.lc_height)
-        //   .attr("transform",
-        //   "translate(" + this.margin.left + ", " + (this.margin.top + (this.focus_height + this.margin.y) * margin_iterator) + ")")
-        //
-        // let context = canvas.node().getContext('2d');
-
-        this.charts.set(dim, {linechart: linechart, focus: focus, canvas: null, context: null})
+        this.charts.set(dim, {linechart: linechart, focus: focus, canvas: canvas})
 
         this.filters.set(dim, new Map())
 
@@ -422,41 +426,6 @@ export class LineCharts {
     })
 
     this.initialized = true;
-  }
-
-  bindData(dim) {
-    // let chart = this.charts.get(dim).canvas.selectAll("path.line")
-    let chart = this.shadow_element.selectAll("path.line")
-      .data(this.data)
-
-    chart.enter()
-      .append("path")
-      .attr("class", "line")
-
-    chart.exit().remove();
-  }
-
-  drawCanvas = (dim) => {
-    let self = this;
-    let context = this.charts.get(dim).context
-
-    // clear canvas
-    context.clearRect(0, 0, this.lc_width, this.lc_height);
-
-    // get all elements
-    let elements = this.shadow_element.selectAll('path.line');
-
-    // draw
-    console.time(dim)
-    elements.each(function(d, i) {
-      context.beginPath();
-      self.valueline.get(dim)(d["data"]);
-      context.lineWidth = 1.5;
-      context.strokeStyle = d["color"];
-      context.stroke();
-      // context.closePath();
-    });
-    console.timeEnd(dim)
   }
 
   updateBars = (dim) => {
@@ -532,7 +501,7 @@ export class LineCharts {
         })
     }
     if(this.mode = "Opacity + Viridis") {
-      this.drawCanvas(dim)
+      // this.drawCanvas(dim)
       // let chart = this.charts.get(dim).linechart.selectAll("path.line")
       //   .data(this.data.filter( x => {
       //     return x.highlight > 0;
@@ -550,8 +519,22 @@ export class LineCharts {
       // chart.exit().remove();
 
       this.charts.get(dim).focus.selectAll("rect.bar")
-        .style("fill", function(d) {
-          return d.color
+        .style("fill", function(b) {
+          let opacity = 0;
+          let counter = 0;
+
+          self.data.forEach((d: any[]) => {
+            let value = d["data"][self.selected_time][dim];
+
+            if(value >= b.x0 && value <= b.x1) {
+              counter++;
+              opacity += d["highlight"]
+            }
+          })
+
+          if(b.length < 1) return 0;
+
+          return self.quantize(opacity / counter)
         })
     }
   }
@@ -570,8 +553,6 @@ export class LineCharts {
       .attr("fill", "none")
       .attr("d", this.lineGenerator)
       .moveToFront();
-
-
   }
 
   updateBrush(dim) {
