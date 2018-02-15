@@ -425,6 +425,7 @@ export class LineCharts {
     let elements = this.shadow_element.selectAll('path.line');
 
     // draw
+    console.log(elements)
     console.time(dim)
     elements.each(function(d, i) {
       context.beginPath();
