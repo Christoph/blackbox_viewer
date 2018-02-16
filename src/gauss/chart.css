@@ -3,6 +3,10 @@
   text-decoration: underline;
 }
 
+text.text {
+  font-size: 0.7em;
+}
+
 .brush .extent {
   fill-opacity: .3;
   stroke: #fff;

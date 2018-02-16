@@ -465,6 +465,7 @@ export class LineCharts {
       .call(d3.axisBottom(this.focus_x.get(dim)).ticks(2));
 
     this.charts.get(dim).focus.selectAll(".bar").remove();
+    this.charts.get(dim).focus.selectAll(".text").remove();
     let focus_chart = this.charts.get(dim).focus.selectAll("rect.bars")
       .data(this.bins)
 
@@ -483,10 +484,20 @@ export class LineCharts {
       .attr("height", (d) => {
         return this.y.get(dim)(d.x0) - this.y.get(dim)(d.x1) - 1;
       })
-      .moveToBack();
 
-      this.resolve_brushing(dim, true);
-      this.updateHighlight(dim)
+    focus_chart.enter().append("text")
+      .attr("class", "text")
+      .style("text-anchor", "middle")
+      .merge(focus_chart)
+      .attr("transform", d => "translate(0," + this.y.get(dim)(d.x1) + ") rotate(90)")
+      .attr("x", d => ( this.y.get(dim)(d.x0) - this.y.get(dim)(d.x1) - 1)/2)
+      .attr("y", d => -this.focus_x.get(dim)(d.length) - 1)
+      .text(function(d) {
+        if(d.length > 0 && d.length < 10) return d.length
+      })
+
+    this.resolve_brushing(dim, true);
+    this.updateHighlight(dim)
   }
 
   updateHighlight(dim) {
@@ -641,8 +652,19 @@ export class LineCharts {
         .attr("height", (d) => {
           return this.y.get(dim)(d.x0) - this.y.get(dim)(d.x1) - 1;
         })
-        .moveToBack();
+        // .moveToBack();
+
+      focus_chart.enter().append("text")
+        .attr("class", "text")
+        .style("text-anchor", "middle")
+        .attr("transform", d => "translate(0," + this.y.get(dim)(d.x1) + ") rotate(90)")
+        .attr("x", d => ( this.y.get(dim)(d.x0) - this.y.get(dim)(d.x1) - 1)/2)
+        .attr("y", d => -this.focus_x.get(dim)(d.length) - 1)
+        .text(function(d) {
+          if(d.length > 0 && d.length < 10) return d.length
+        })
     })
+
 
     this.data
     .forEach(d => {
