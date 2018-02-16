@@ -163,6 +163,11 @@
                 "main": "lodash.min"
           },
           {
+                "name": "pixi.js",
+                "path": "../node_modules/pixi.js/dist",
+                "main": "pixi.min"
+          },
+          {
                 "name": "papaparse",
                 "path": "../node_modules/papaparse",
                 "main": "papaparse.min"

@@ -142,11 +142,15 @@ export class parallelBarCharts {
       .append("svg")
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom)
+      .on("click", function(d) {
+        d3.selectAll(".line_parallel").classed("background", false);
+        d3.selectAll(".line_parallel").classed("selected", false);
+      })
 
     this.chart = this.svg
       .append("g")
       .attr("transform",
-      "translate(" + this.margin.left + "," + this.margin.top + ")");
+      "translate(" + this.margin.left + "," + this.margin.top + ")")
 
     this.parcoords =
       this.chart.append("g")
@@ -181,7 +185,6 @@ export class parallelBarCharts {
 
   updateHighlight() {
     let self = this;
-    // TODO: NOrmlize color or opacity over all charts!
 
     for (var dim in this.charts) {
       if(this.mode == "Opacity") {
@@ -204,7 +207,7 @@ export class parallelBarCharts {
             return opacity / counter
           })
 
-          this.svg.selectAll(".line")
+          this.svg.selectAll(".line_parallel")
             .attr("opacity", function(d) {
               return d["highlight"]
             })
@@ -214,35 +217,12 @@ export class parallelBarCharts {
           let opacity = 0;
           let counter = 0;
 
-          // this.charts[dim].selectAll(".bar-parallel")
-          //   .attr("opacity", function(bar) {
-          //     self.data.forEach((d) => {
-          //       let value = d["data"][dim];
-          //
-          //       if(value >= bar.x0 && value <= bar.x1) {
-          //         counter++;
-          //         opacity += d["highlight"]
-          //       }
-          //     })
-          //
-          //     if(bar.length < 1) return 0;
-          //
-          //     if(opacity > 0) return self.quantize_opacity(opacity / counter)
-          //     else return 0
-          //   })
-
-          this.svg.selectAll(".line")
-            .attr("opacity", function(d) {
-              return d["highlight"]
-            })
-            .moveToBack()
-
           this.charts[dim].selectAll(".bar-parallel")
             .style("fill", function(bar) {
               let opacity = 0;
               let counter = 0;
 
-              self.data.forEach((d) => {
+              self.data.forEach((d: any[]) => {
                 let value = d["params"][dim];
 
                 if(value >= bar.x0 && value <= bar.x1) {
@@ -251,61 +231,20 @@ export class parallelBarCharts {
                 }
               })
 
-              if(bar.length < 1) return 0;
-
               if(opacity <= 0) {
-                return "white"
+                return "#d3d3d3"
               }
               else {
                 return self.quantize(opacity / counter)
               }
+
             })
 
-          this.svg.selectAll(".line")
+          this.svg.selectAll(".line_parallel")
             .style("stroke", function(d) {
-              return self.color_viridis(d["highlight"])
+              return d["color"]
             })
             .moveToBack()
-        }
-        else if(this.mode = "Color-Viridis") {
-          this.charts[dim].selectAll(".bar-parallel")
-          .style("fill", function(bar) {
-            let opacity = 0;
-            let counter = 0;
-
-            self.data.forEach((d) => {
-              let value = d["params"][dim];
-
-              if(value >= bar.x0 && value <= bar.x1) {
-                counter++;
-                opacity += d["highlight"]
-              }
-            })
-
-            if(bar.length < 1) return 0;
-
-            return self.color_viridis(opacity / counter)
-          })
-        }
-        else if(this.mode = "Color-Plasma") {
-          this.charts[dim].selectAll(".bar-parallel")
-          .style("fill", function(bar) {
-            let opacity = 0;
-            let counter = 0;
-
-            self.data.forEach((d) => {
-              let value = d["params"][dim];
-
-              if(value >= bar.x0 && value <= bar.x1) {
-                counter++;
-                opacity += d["highlight"]
-              }
-            })
-
-            if(bar.length < 1) return 0;
-
-            return self.color_plasma(opacity / counter)
-          })
         }
     }
   }
@@ -352,7 +291,7 @@ export class parallelBarCharts {
       })
 
       this.x[dim] = d3.scaleLinear()
-        .range([this.width, 0])
+        .range([0, this.width])
         .domain([ext[0], ext[1]])
 
       let focus_data = this.data.map(a => a["params"][dim])
@@ -402,7 +341,7 @@ export class parallelBarCharts {
           .style("text-anchor", "middle")
           .attr("transform", "rotate(-90)")
           .attr("y", -25)
-          .attr("x", (this.chart_height - this.margin.middle)/2 - this.margin.top)
+          .attr("x", -(this.chart_height)/2)
           .text(dim);
 
       let bar_chart = g.selectAll("rect.bars")
@@ -411,13 +350,13 @@ export class parallelBarCharts {
       bar_chart.enter().append("rect")
         .attr("class", "bar-parallel")
         .attr("transform", (d) => {
-          return "translate(" + (this.x[dim](d.x1)) + ", " + (this.y[dim](d.length)) + ")";
+          return "translate(" + (this.x[dim](d.x0)) + ", " + (this.y[dim](d.length)) + ")";
         })
         .attr("x", 1)
         .attr("height", (d) => {
           return this.chart_height - this.y[dim](d.length); })
         .attr("width", (d) => {
-          return this.x[dim](d.x0) - this.x[dim](d.x1) - 1;
+          return this.x[dim](d.x1) - this.x[dim](d.x0) -1;
         })
 
       // Add and store a brush for each axis.
@@ -473,9 +412,18 @@ export class parallelBarCharts {
       .selectAll("path")
       .data(this.data)
       .enter().append("path")
-      .attr("class", "line")
+      .attr("class", "line_parallel")
       .attr("d", (d) => {
         return this.path(d["params"])
+      })
+      .on("click", function(d) {
+        d3.event.stopPropagation();
+        d3.selectAll(".line_parallel").classed("background", true);
+
+        let clicked = d3.select(this);
+        clicked.classed("background", false);
+        clicked.classed("selected", true);
+
       })
       .moveToBack()
   }

@@ -32,6 +32,8 @@ export class Gauss {
   color_viridis = d3.scaleSequential(d3.interpolateViridis)
     .domain([0, 1])
 
+  initial_color = "#d3d3d3";
+
   quantize =  d3.scaleQuantize()
       .domain([0.1, 1.1])
       .range([0.2, 0.4, 0.6, 0.8, 1])
@@ -107,7 +109,7 @@ export class Gauss {
       this.data_charts.push({
         id: i,
         highlight: 1,
-        color: "steelblue",
+        color: this.initial_color,
         params: d.params,
         data: d.data
       })
@@ -115,7 +117,7 @@ export class Gauss {
       this.data_lines_original.push({
         id: i,
         highlight: 1,
-        color: "steelblue",
+        color: this.initial_color,
         params: d.params,
         data: d.data
       })
@@ -135,12 +137,17 @@ export class Gauss {
   }
 
   private updateData() {
-    this.outFilter.set(this.brushing_lines.dim, {
-      timestep: this.brushing_lines.timestep,
-      scale: d3.scaleLinear()
-        .domain([this.brushing_lines.center - this.brushing_lines.radius, this.brushing_lines.center, this.brushing_lines.center + this.brushing_lines.radius])
-        .range([0.1, 1.1, 0.1])
-    })
+    if(this.brushing_lines.active) {
+      this.outFilter.set(this.brushing_lines.dim, {
+        timestep: this.brushing_lines.timestep,
+        scale: d3.scaleLinear()
+          .domain([this.brushing_lines.center - this.brushing_lines.radius, this.brushing_lines.center, this.brushing_lines.center + this.brushing_lines.radius])
+          .range([0.1, 1.1, 0.1])
+      })
+    }
+    else {
+      this.outFilter.delete(this.brushing_lines.dim)
+    }
 
     // Set highlight and colors
     this.data_charts
@@ -148,24 +155,36 @@ export class Gauss {
         let highlight = 0;
         let counter = 0;
 
-        this.outFilter.forEach((data, dim) => {
-          if(x.data[data.timestep][dim] >= data.scale.domain()[0] && x.data[data.timestep][dim] <= data.scale.domain()[2]) {
-            highlight += data.scale(x.data[data.timestep][dim]);
-            counter++;
-          }
-        })
+        if(this.outFilter.size > 0) {
+          this.outFilter.forEach((data, dim) => {
+            if(x.data[data.timestep][dim] >= data.scale.domain()[0] && x.data[data.timestep][dim] <= data.scale.domain()[2]) {
+              highlight += data.scale(x.data[data.timestep][dim]);
+              counter++;
+            }
+          })
 
-        if(highlight <= 0) {
-          x.highlight = 0;
-          x.color = "none"
+          if(highlight <= 0) {
+            x.highlight = 0;
+            x.color = "none"
+          }
+          else {
+            x.highlight = this.quantize(highlight/counter);
+            x.color = this.color_viridis(x.highlight);
+          }
         }
         else {
-          x.highlight = this.quantize(highlight/counter);
-          x.color = this.color_viridis(x.highlight)
+          x.highlight = 0;
+          x.color = this.initial_color;
         }
       })
 
+<<<<<<< HEAD
     console.timeEnd("forEach")
+=======
+      // this.data_charts.sort(function(x, y){
+      //    return d3.ascending(x.highlight, y.highlight);
+      // })
+>>>>>>> webgl
 
     this.redraw_lines = this.redraw_lines == 0 ? 1 : 0;
     this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;

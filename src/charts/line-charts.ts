@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import * as _ from "lodash";
+import * as PIXI from "pixi.js";
 import { inject, noView, bindable, bindingMode, BindingEngine } from 'aurelia-framework';
 
 @inject(Element, BindingEngine)
@@ -27,10 +28,14 @@ export class LineCharts {
   private initialized = false;
   private mouse_event;
   private svg;
+  private app;
+  private line_id = new Map();
+  private id_color = new Map();
   private dimensions;
   private charts;
   private x;
   private y = new Map();
+  private y_gl = new Map();
   private focus_x = new Map();
   private valueline = new Map();
   private filters = new Map()
@@ -49,6 +54,7 @@ export class LineCharts {
   private quantize_opacity;
   private weight_to_highlight;
   private lineGenerator;
+  private brush_active = false;
 
   // set the dimensions and margins of the graph
   private width;
@@ -102,7 +108,10 @@ export class LineCharts {
 
   redrawChanged() {
     if (this.data.length > 1) {
-      console.time("redraw")
+      this.data.forEach(d => {
+        this.id_color.set(d["id"], d["color"])
+      })
+
       this.dimensions.forEach((dim) => {
         this.updateHighlight(dim);
       })
@@ -142,8 +151,9 @@ export class LineCharts {
     return data
   }
 
-  resolve_brushing(dim) {
+  resolve_brushing(dim, active) {
     this.brushing = {
+      active: active,
       center: this.center,
       radius: this.weight,
       dim: dim,
@@ -155,8 +165,25 @@ export class LineCharts {
     let self = this;
 
     // Complete drawing area
+    let canvas = d3.select(this.element)
+      .append("canvas")
+      .style("position", "absolute")
+      .style("top", 0)
+      .style("left", 0)
+
+      this.app = new PIXI.Application({
+        view: canvas.node(),
+        width: this.width  + this.margin.left + this.margin.right,
+        height: this.height + this.margin.top + this.margin.bottom,
+        transparent: true,
+        antialias: true
+      });
+
     this.svg = d3.select(this.element)
       .append("svg")
+      .style("position", "absolute")
+      .style("top", 0)
+      .style("left", 0)
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom);
 
@@ -164,6 +191,11 @@ export class LineCharts {
     this.dimensions = d3.keys(this.data[0]["data"][0]).filter((d) => {
       return d != this.x_attribute
     });
+
+    // Initialize id color Map
+    this.dimensions.forEach(dim => {
+      this.line_id.set(dim, new Map())
+    })
 
     // Set height value
     this.lc_height = (this.y_size - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.y))/this.dimensions.length;
@@ -173,6 +205,19 @@ export class LineCharts {
 
     // Reset charts map
     this.charts = new Map();
+
+    this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
+      .domain([0, 1])
+
+    this.quantize = d3.scaleQuantize()
+        .domain([0, 1])
+        .range([
+          this.color_viridis(0.2),
+          this.color_viridis(0.4),
+          this.color_viridis(0.6),
+          this.color_viridis(0.8),
+          this.color_viridis(1),
+        ])
 
     // for all charts
     this.x = d3.scaleLinear()
@@ -195,7 +240,7 @@ export class LineCharts {
           self.weight_to_highlight.domain([0, self.weight])
 
           self.updateBrush(dim);
-          self.resolve_brushing(dim);
+          self.resolve_brushing(dim, true);
         }
       }
 
@@ -212,8 +257,6 @@ export class LineCharts {
         .attr("transform",
         "translate(" + this.focus_offset + ", " + (this.margin.top + (this.focus_height + this.margin.y) * margin_iterator) + ")")
 
-      margin_iterator++;
-
       focus
         .append("rect")
         .attr("width", this.focus_width)
@@ -228,12 +271,13 @@ export class LineCharts {
           console.time("mouse down")
           self.createBrush(dim);
           self.updateBrush(dim);
-          self.resolve_brushing(dim);
-          console.timeEnd("mouse down")
+          self.resolve_brushing(dim, true);
 
+          self.brush_active = true;
           brushing = true;
         })
         .on("mousemove", _.throttle(updateBrushing, 50))
+        // .on("mousemove", updateBrushing)
         .on("mouseup", function(d) {
           brushing = false;
           console.log("mouse up")
@@ -316,6 +360,19 @@ export class LineCharts {
           .attr("x", this.lc_width - 10)
           .attr("y", -10)
 
+        focus.append("text")
+          .attr("class", "reset")
+          .style("text-anchor", "middle")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -10)
+          .attr("x", -this.focus_height/2)
+          .text("Reset Brush")
+          .on("click", x => {
+            self.charts.get(dim).focus.selectAll("path.focusline").remove()
+            self.resolve_brushing(dim, false)
+            self.brush_active = false;
+          })
+
         // add the x Axis
         focus.append("g")
           .attr("transform", "translate(0," + this.lc_height + ")")
@@ -327,7 +384,7 @@ export class LineCharts {
 
         // y axis label
         linechart.append("text")
-          .style("text-anchor", "middle")
+          .style("text-anchor", "start")
           .attr("y", -4)
           .text(dim);
 
@@ -338,7 +395,7 @@ export class LineCharts {
 
         // y axis label
         focus.append("text")
-          .style("text-anchor", "middle")
+          .style("text-anchor", "end")
           .attr("y", -4)
           .attr("x", this.focus_width)
           .text(dim);
@@ -349,6 +406,11 @@ export class LineCharts {
 
         this.y.set(dim, y)
 
+        let y_gl = d3.scaleLinear()
+          .range([this.lc_height, 0]);
+
+        this.y_gl.set(dim, y_gl)
+
         let focus_x = d3.scaleLinear()
           .range([0, this.focus_width]);
 
@@ -358,13 +420,6 @@ export class LineCharts {
           .domain([0, this.focus_width]);
 
         this.x_weight.set(dim , x_weight)
-
-        // define the line
-        let valueline = d3.line()
-          .x((d) => this.x(d[this.x_attribute]))
-          .y((d) => this.y.get(dim)(d[dim]));
-
-        this.valueline.set(dim, valueline)
 
         // Update axis
         linechart.selectAll(".xAxis")
@@ -377,9 +432,18 @@ export class LineCharts {
         focus.selectAll(".xAxis")
           .call(d3.axisBottom(this.focus_x.get(dim)).ticks(2));
 
-        this.charts.set(dim, {linechart: linechart, focus: focus})
+        // Webgl parts
+        let container = new PIXI.Container()
 
+        container.position.x = this.margin.left
+        container.position.y = this.margin.top + (this.focus_height + this.margin.y) * margin_iterator
+
+        this.app.stage.addChild(container);
+
+        this.charts.set(dim, {linechart: linechart, focus: focus, container: container})
         this.filters.set(dim, new Map())
+
+        margin_iterator++;
     })
 
     this.initialized = true;
@@ -407,6 +471,7 @@ export class LineCharts {
       .call(d3.axisBottom(this.focus_x.get(dim)).ticks(2));
 
     this.charts.get(dim).focus.selectAll(".bar").remove();
+    this.charts.get(dim).focus.selectAll(".text").remove();
     let focus_chart = this.charts.get(dim).focus.selectAll("rect.bars")
       .data(this.bins)
 
@@ -416,6 +481,7 @@ export class LineCharts {
     // Add bars
     focus_chart.enter().append("rect")
       .attr("class", "bar")
+      .merge(focus_chart)
       .attr("transform", (d) => {
         return "translate(0," + this.y.get(dim)(d.x1) + ")";
       })
@@ -426,8 +492,22 @@ export class LineCharts {
       })
       .moveToBack();
 
-      this.resolve_brushing(dim);
+    focus_chart.enter().append("text")
+      .attr("class", "text")
+      .style("text-anchor", "middle")
+      .merge(focus_chart)
+      .attr("transform", d => "translate(0," + this.y.get(dim)(d.x1) + ") rotate(90)")
+      .attr("x", d => ( this.y.get(dim)(d.x0) - this.y.get(dim)(d.x1) - 1)/2)
+      .attr("y", d => -this.focus_x.get(dim)(d.length) - 1)
+      .text(function(d) {
+        if(d.length > 0 && d.length < 10) return d.length
+      })
+      .moveToBack();
+
+    if(this.brush_active) {
+      this.resolve_brushing(dim, true);
       this.updateHighlight(dim)
+    }
   }
 
   updateHighlight(dim) {
@@ -487,13 +567,39 @@ export class LineCharts {
           if(d["highlight"] == 0) return "#d3d3d3"
           else return d["color"]
         })
+    }
+    if(this.mode = "Opacity + Viridis") {
+      this.charts.get(dim).container.children.forEach(x => {
+        let color = this.id_color.get(this.line_id.get(dim).get(x))
 
-      console.timeEnd("draw")
+        if(color == "none") {
+          x.alpha = 0;
+          // x.tint = parseInt("d3d3d3", 16);
+        }
+        else {
+          x.alpha = 1;
+          x.tint = parseInt(color.substring(1), 16);
+        }
+      })
 
-      // this.charts.get(dim).focus.selectAll("rect.bar")
-      //   .style("fill", function(d) {
-      //     return d.color
-      //   })
+      this.charts.get(dim).focus.selectAll("rect.bar")
+        .style("fill", function(b) {
+          let opacity = 0;
+          let counter = 0;
+
+          self.data.forEach((d: any[]) => {
+            let value = d["data"][self.selected_time][dim];
+
+            if(value >= b.x0 && value <= b.x1) {
+              counter++;
+              opacity += d["highlight"]
+            }
+          })
+
+          if(opacity <= 0) return "#d3d3d3";
+
+          return self.quantize(opacity / counter)
+        })
     }
 
     console.log("highlight done")
@@ -535,6 +641,7 @@ export class LineCharts {
       return d[this.x_attribute]
     })
 
+    // Per dimension calls
     this.dimensions.map((dim) => {
       let y_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[dim]))
       let y_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[dim]))
@@ -548,6 +655,7 @@ export class LineCharts {
       })
 
       this.y.get(dim).domain([y_min, y_max]);
+      this.y_gl.get(dim).domain([y_min, y_max])
 
       this.bins = d3.histogram()
         .domain(this.y.get(dim).domain())
@@ -557,22 +665,6 @@ export class LineCharts {
       this.focus_x.get(dim).domain([0, d3.max(this.bins, (d: any[]) => d.length)]);
 
       this.x_weight.get(dim).range([0, (y_max - y_min)/2])
-
-      // Select chart
-      let chart = this.charts.get(dim).linechart.selectAll("path.line")
-        .data(this.data.filter( x => {
-          return x.highlight > 0;
-        }).sort(function(a, b) {
-          return d3.ascending(a.highlight, b.highlight)
-        }))
-
-      chart.enter()
-        .append("path")
-        .attr("class", "line")
-        .merge(chart)
-        .attr("d", (d) => this.valueline.get(dim)(d["data"]));
-
-      chart.exit().remove();
 
       this.charts.get(dim).focus.selectAll(".bar").remove();
       let focus_chart = this.charts.get(dim).focus.selectAll("rect.bars")
@@ -605,6 +697,36 @@ export class LineCharts {
           return this.y.get(dim)(d.x0) - this.y.get(dim)(d.x1) - 1;
         })
         .moveToBack();
+
+      focus_chart.enter().append("text")
+        .attr("class", "text")
+        .style("text-anchor", "middle")
+        .attr("transform", d => "translate(0," + this.y.get(dim)(d.x1) + ") rotate(90)")
+        .attr("x", d => ( this.y.get(dim)(d.x0) - this.y.get(dim)(d.x1) - 1)/2)
+        .attr("y", d => -this.focus_x.get(dim)(d.length) - 1)
+        .text(function(d) {
+          if(d.length > 0 && d.length < 10) return d.length
+        })
+        .moveToBack();
+    })
+
+
+    this.data
+    .forEach(d => {
+      this.dimensions.forEach(dim => {
+        let line = new PIXI.Graphics();
+        line.lineStyle(1, 0xffffff, 1);
+        line.tint = parseInt("#d3d3d3".substring(1), 16)
+        line.blendMode = PIXI.BLEND_MODES.NORMAL
+
+        for(let i = 0; i < d["data"].length-1; i++) {
+          line.moveTo(this.x(d["data"][i][this.x_attribute]),this.y_gl.get(dim)(d["data"][i][dim]));
+          line.lineTo(this.x(d["data"][i+1][this.x_attribute]),this.y_gl.get(dim)(d["data"][i+1][dim]));
+        }
+
+        this.charts.get(dim).container.addChild(line);
+        this.line_id.get(dim).set(line, d["id"])
+      })
     })
   }
 }

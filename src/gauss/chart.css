@@ -1,12 +1,10 @@
-.background path {
-  fill: none;
-  stroke: #ddd;
-  shape-rendering: crispEdges;
+.reset:hover {
+  cursor: pointer;
+  text-decoration: underline;
 }
 
-.foreground path {
-  fill: none;
-  stroke: steelblue;
+text.text {
+  font-size: 0.7em;
 }
 
 .brush .extent {
@@ -56,7 +54,7 @@
 }
 
 circle {
-  stroke: black;
+  stroke: #d3d3d3;
   stroke-width: 0.1px;
 }
 
@@ -81,8 +79,41 @@ circle.hidden {
 
 .line {
   fill: none;
-  stroke: steelblue;
-  stroke-width: 1.5px;
+  stroke: #d3d3d3;
+  stroke-width: 2px;
+  shape-rendering: auto;
+}
+
+.line_parallel {
+  cursor: pointer;
+  fill: none;
+  stroke: #d3d3d3;
+  stroke-width: 2px;
+  shape-rendering: auto;
+}
+
+.line_parallel.selected {
+  cursor: pointer;
+  fill: none;
+  stroke: #d3d3d3;
+  stroke-width: 3px;
+  shape-rendering: auto;
+}
+
+.line_parallel:hover {
+  stroke-width: 4px;
+}
+
+.line_parallel.background:hover {
+  stroke-width: 4px;
+  opacity: 0.75;
+}
+
+.line_parallel.background {
+  cursor: pointer;
+  fill: none;
+  opacity: 0.1;
+  stroke-width: 2px;
   shape-rendering: auto;
 }
 
@@ -99,15 +130,9 @@ circle.hidden {
 }
 
 rect.bar {
-  fill: steelblue;
-  outline-width: thin;
-  outline-style: solid;
-  outline-color: #c7c7c7;
+  fill: #d3d3d3;
 }
 
 rect.bar-parallel {
-  fill: steelblue;
-  outline-width: thin;
-  outline-style: solid;
-  outline-color: #c7c7c7;
+  fill: #d3d3d3;
 }
