@@ -151,7 +151,7 @@ export class parallelBarCharts {
     this.parcoords =
       this.chart.append("g")
 
-    this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
+    this.color_viridis = d3.scaleSequential(d3.interpolateInferno)
       .domain([0, 1])
     this.color_plasma = d3.scaleSequential(d3.interpolatePlasma)
       .domain([0, 1])
@@ -231,18 +231,18 @@ export class parallelBarCharts {
           //     else return 0
           //   })
 
-          this.svg.selectAll(".line")
-            .attr("opacity", function(d) {
-              return d["highlight"]
-            })
-            .moveToBack()
+          // this.svg.selectAll(".line")
+          //   .attr("opacity", function(d) {
+          //     return d["highlight"]
+          //   })
+          //   .moveToBack()
 
           this.charts[dim].selectAll(".bar-parallel")
             .style("fill", function(bar) {
               let opacity = 0;
               let counter = 0;
 
-              self.data.forEach((d) => {
+              self.data.forEach((d: any[]) => {
                 let value = d["params"][dim];
 
                 if(value >= bar.x0 && value <= bar.x1) {
@@ -253,17 +253,12 @@ export class parallelBarCharts {
 
               if(bar.length < 1) return 0;
 
-              if(opacity <= 0) {
-                return "white"
-              }
-              else {
-                return self.quantize(opacity / counter)
-              }
+              return self.quantize(opacity / counter)
             })
 
           this.svg.selectAll(".line")
             .style("stroke", function(d) {
-              return self.color_viridis(d["highlight"])
+              return d["color"]
             })
             .moveToBack()
         }
