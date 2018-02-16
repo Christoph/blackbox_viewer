@@ -178,13 +178,9 @@ export class Gauss {
         }
       })
 
-<<<<<<< HEAD
-    console.timeEnd("forEach")
-=======
       // this.data_charts.sort(function(x, y){
       //    return d3.ascending(x.highlight, y.highlight);
       // })
->>>>>>> webgl
 
     this.redraw_lines = this.redraw_lines == 0 ? 1 : 0;
     this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
