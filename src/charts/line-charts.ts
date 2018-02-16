@@ -461,6 +461,7 @@ export class LineCharts {
     // Add bars
     focus_chart.enter().append("rect")
       .attr("class", "bar")
+      .merge(focus_chart)
       .attr("transform", (d) => {
         return "translate(0," + this.y.get(dim)(d.x1) + ")";
       })

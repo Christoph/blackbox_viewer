@@ -151,6 +151,7 @@ export class Gauss {
 
     this.data_charts.length = 0
     this.data_lines_original.length = 0
+    let initial_color = this.color_viridis(0);
 
     for (let i = 0; i < this.data.length; i++) {
       let d = this.data[i]
@@ -158,7 +159,7 @@ export class Gauss {
       this.data_charts.push({
         id: i,
         highlight: 1,
-        color: "steelblue",
+        color: initial_color,
         params: d.params,
         data: d.data
       })
@@ -166,7 +167,7 @@ export class Gauss {
       this.data_lines_original.push({
         id: i,
         highlight: 1,
-        color: "steelblue",
+        color: initial_color,
         params: d.params,
         data: d.data
       })
