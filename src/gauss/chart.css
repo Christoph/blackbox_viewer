@@ -86,6 +86,22 @@ circle.hidden {
   shape-rendering: auto;
 }
 
+.line_parallel {
+  cursor: pointer;
+  fill: none;
+  stroke: black;
+  stroke-width: 2.5px;
+  shape-rendering: auto;
+}
+
+.line_parallel.background {
+  cursor: pointer;
+  fill: none;
+  opacity: 0.1;
+  stroke-width: 2.5px;
+  shape-rendering: auto;
+}
+
 .focusline {
   fill: none;
   stroke: black;

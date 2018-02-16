@@ -142,11 +142,14 @@ export class parallelBarCharts {
       .append("svg")
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom)
+      .on("click", function(d) {
+        d3.selectAll(".line_parallel").classed("background", false);
+      })
 
     this.chart = this.svg
       .append("g")
       .attr("transform",
-      "translate(" + this.margin.left + "," + this.margin.top + ")");
+      "translate(" + this.margin.left + "," + this.margin.top + ")")
 
     this.parcoords =
       this.chart.append("g")
@@ -203,7 +206,7 @@ export class parallelBarCharts {
             return opacity / counter
           })
 
-          this.svg.selectAll(".line")
+          this.svg.selectAll(".line_parallel")
             .attr("opacity", function(d) {
               return d["highlight"]
             })
@@ -255,7 +258,7 @@ export class parallelBarCharts {
               return self.quantize(opacity / counter)
             })
 
-          this.svg.selectAll(".line")
+          this.svg.selectAll(".line_parallel")
             .style("stroke", function(d) {
               return d["color"]
             })
@@ -467,9 +470,16 @@ export class parallelBarCharts {
       .selectAll("path")
       .data(this.data)
       .enter().append("path")
-      .attr("class", "line")
+      .attr("class", "line_parallel")
       .attr("d", (d) => {
         return this.path(d["params"])
+      })
+      .on("click", function(d) {
+        d3.event.stopPropagation();
+        d3.selectAll(".line_parallel").classed("background", true);
+
+        let clicked = d3.select(this);
+        clicked.classed("background", false);
       })
       .moveToBack()
   }
