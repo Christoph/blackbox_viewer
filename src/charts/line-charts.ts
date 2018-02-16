@@ -203,7 +203,7 @@ export class LineCharts {
     // Reset charts map
     this.charts = new Map();
 
-    this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
+    this.color_viridis = d3.scaleSequential(d3.interpolateInferno)
       .domain([0, 1])
 
     this.quantize = d3.scaleQuantize()
@@ -272,6 +272,7 @@ export class LineCharts {
           brushing = true;
         })
         .on("mousemove", _.throttle(updateBrushing, 50))
+        // .on("mousemove", updateBrushing)
         .on("mouseup", function(d) {
           brushing = false;
         })
@@ -506,8 +507,8 @@ export class LineCharts {
         let color = this.id_color.get(this.line_id.get(dim).get(x))
 
         if(color == "none") {
-          x.alpha = 0.1;
-          x.tint = 0x171717
+          x.alpha = 0;
+          // x.tint = parseInt("f5f6f8", 16);
         }
         else {
           x.alpha = 1;
@@ -629,10 +630,12 @@ export class LineCharts {
         .moveToBack();
     })
 
-    this.data.forEach(d => {
+    this.data
+    .forEach(d => {
       this.dimensions.forEach(dim => {
         let line = new PIXI.Graphics();
         line.lineStyle(1, 0x4682b4, 1);
+        line.blendMode = PIXI.BLEND_MODES.NORMAL
 
         for(let i = 0; i < d["data"].length-1; i++) {
           line.moveTo(this.x(d["data"][i][this.x_attribute]),this.y_gl.get(dim)(d["data"][i][dim]));
