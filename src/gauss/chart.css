@@ -56,7 +56,7 @@
 }
 
 circle {
-  stroke: black;
+  stroke: #160B39;
   stroke-width: 0.1px;
 }
 
@@ -81,7 +81,7 @@ circle.hidden {
 
 .line {
   fill: none;
-  stroke: black;
+  stroke: #160B39;
   stroke-width: 1.5px;
   shape-rendering: auto;
 }
@@ -89,16 +89,33 @@ circle.hidden {
 .line_parallel {
   cursor: pointer;
   fill: none;
-  stroke: black;
-  stroke-width: 2.5px;
+  stroke: #160B39;
+  stroke-width: 1.5px;
   shape-rendering: auto;
+}
+
+.line_parallel.selected {
+  cursor: pointer;
+  fill: none;
+  stroke: #160B39;
+  stroke-width: 3px;
+  shape-rendering: auto;
+}
+
+.line_parallel:hover {
+  stroke-width: 4px;
+}
+
+.line_parallel.background:hover {
+  stroke-width: 4px;
+  opacity: 0.75;
 }
 
 .line_parallel.background {
   cursor: pointer;
   fill: none;
   opacity: 0.1;
-  stroke-width: 2.5px;
+  stroke-width: 1.5px;
   shape-rendering: auto;
 }
 
@@ -115,9 +132,9 @@ circle.hidden {
 }
 
 rect.bar {
-  fill: "black";
+  fill: #160B39;
 }
 
 rect.bar-parallel {
-  fill: "black";
+  fill: #160B39;
 }

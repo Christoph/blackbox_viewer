@@ -144,6 +144,7 @@ export class parallelBarCharts {
       .attr("height", this.height + this.margin.top + this.margin.bottom)
       .on("click", function(d) {
         d3.selectAll(".line_parallel").classed("background", false);
+        d3.selectAll(".line_parallel").classed("selected", false);
       })
 
     this.chart = this.svg
@@ -480,6 +481,8 @@ export class parallelBarCharts {
 
         let clicked = d3.select(this);
         clicked.classed("background", false);
+        clicked.classed("selected", true);
+
       })
       .moveToBack()
   }

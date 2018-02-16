@@ -100,7 +100,7 @@ export class Gauss {
 
     this.data_charts.length = 0
     this.data_lines_original.length = 0
-    let initial_color = this.color_viridis(0);
+    let initial_color = this.color_viridis(0.1);
 
     for (let i = 0; i < this.data.length; i++) {
       let d = this.data[i]
