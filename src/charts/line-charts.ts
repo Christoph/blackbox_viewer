@@ -149,8 +149,9 @@ export class LineCharts {
     return data
   }
 
-  resolve_brushing(dim) {
+  resolve_brushing(dim, active) {
     this.brushing = {
+      active: active,
       center: this.center,
       radius: this.weight,
       dim: dim,
@@ -237,7 +238,7 @@ export class LineCharts {
           self.weight_to_highlight.domain([0, self.weight])
 
           self.updateBrush(dim);
-          self.resolve_brushing(dim);
+          self.resolve_brushing(dim, true);
         }
       }
 
@@ -267,7 +268,7 @@ export class LineCharts {
 
           self.createBrush(dim);
           self.updateBrush(dim);
-          self.resolve_brushing(dim);
+          self.resolve_brushing(dim, true);
 
           brushing = true;
         })
@@ -353,6 +354,18 @@ export class LineCharts {
         selector.append("text")
           .attr("x", this.lc_width - 10)
           .attr("y", -10)
+
+        focus.append("text")
+          .attr("class", "reset")
+          .style("text-anchor", "middle")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -10)
+          .attr("x", -this.focus_height/2)
+          .text("Reset Brush")
+          .on("click", x => {
+            self.charts.get(dim).focus.selectAll("path.focusline").remove()
+            self.resolve_brushing(dim, false)
+          })
 
         // add the x Axis
         focus.append("g")
@@ -472,7 +485,7 @@ export class LineCharts {
       })
       .moveToBack();
 
-      this.resolve_brushing(dim);
+      this.resolve_brushing(dim, true);
       this.updateHighlight(dim)
   }
 
@@ -636,7 +649,7 @@ export class LineCharts {
       this.dimensions.forEach(dim => {
         let line = new PIXI.Graphics();
         line.lineStyle(1, 0xffffff, 1);
-        line.tint = parseInt("#482475".substring(1), 16)
+        line.tint = parseInt("#d3d3d3".substring(1), 16)
         line.blendMode = PIXI.BLEND_MODES.NORMAL
 
         for(let i = 0; i < d["data"].length-1; i++) {
