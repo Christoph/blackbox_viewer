@@ -181,7 +181,6 @@ export class parallelBarCharts {
 
   updateHighlight() {
     let self = this;
-    // TODO: NOrmlize color or opacity over all charts!
 
     for (var dim in this.charts) {
       if(this.mode == "Opacity") {
@@ -397,7 +396,7 @@ export class parallelBarCharts {
           .style("text-anchor", "middle")
           .attr("transform", "rotate(-90)")
           .attr("y", -25)
-          .attr("x", (this.chart_height - this.margin.middle)/2 - this.margin.top)
+          .attr("x", -(this.chart_height)/2)
           .text(dim);
 
       let bar_chart = g.selectAll("rect.bars")
