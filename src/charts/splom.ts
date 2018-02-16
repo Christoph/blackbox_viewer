@@ -6,7 +6,7 @@ import { inject, noView, bindable, bindingMode, BindingEngine } from 'aurelia-fr
 @noView()
 export class Splom {
   // One-Way
-  @bindable margin = { top: 25, right: 40, bottom: 35, left: 40, padding: 20 };
+  @bindable margin = { top: 25, right: 0, bottom: 35, left: 60, padding: 20 };
   @bindable size = 50;
   @bindable redraw = 0;
   @bindable reset = 0;
@@ -70,12 +70,6 @@ export class Splom {
       if(!this.initialized) this.initChart()
 
       this.updateChart();
-      // this.svg.selectAll("path.focusline").remove()
-    }
-    else {
-      // this.svg.selectAll(".line").remove()
-      // this.svg.selectAll(".bar").remove()
-      // this.svg.selectAll("path.focusline").remove()
     }
   }
 
@@ -90,9 +84,6 @@ export class Splom {
       this.svg.remove();
       this.initialized = false;
     }
-
-    // this.initChart();
-    // this.updateChart();
   }
 
   unbind() {
@@ -104,80 +95,6 @@ export class Splom {
     for (i = -1; ++i < n;) for (j = -1; ++j < m;) c.push({x: a[i], i: i, y: b[j], j: j});
     return c;
   }
-
-  resetFilter(dim) {
-    this.charts.get(dim).focus.selectAll("path.focusline").remove();
-    let out = new Map()
-    this.filters.set(dim, new Map())
-
-    // Update average filter
-    this.filters.forEach((v, k) => {
-      if(v.size > 0) {
-        v.forEach((iv, ik) => {
-          if(out.has(ik)) {
-            let value = out.get(ik)
-
-            out.set(ik, (value + iv)/2)
-          }
-          else {
-            out.set(ik, iv)
-          }
-        })
-      }
-    })
-
-    this.brushing = out;
-  }
-
-  // resolve_brushing(dim) {
-  //   let out = new Map()
-  //   let temp = new Map()
-  //
-  //   this.data.forEach(d => {
-  //     if(d.data[this.selected_time][dim] >= this.center-this.weight &&
-  //     d.data[this.selected_time][dim] <= this.center+this.weight) {
-  //       if(d.data[this.selected_time][dim] < this.center) {
-  //         temp.set(
-  //           d["id"],
-  //           this.weight_to_highlight(d.data[this.selected_time][dim] - (this.center - this.weight))
-  //         )
-  //       }
-  //       else {
-  //         temp.set(
-  //           d["id"],
-  //           this.weight_to_highlight(Math.abs(d.data[this.selected_time][dim] - (this.center + this.weight)))
-  //         )
-  //       }
-  //     }
-  //     else {
-  //       temp.set(
-  //         d["id"],
-  //         0
-  //       )
-  //     }
-  //   })
-  //
-  //   this.filters.set(dim, temp)
-  //
-  //   // Update average filter
-  //   this.filters.forEach((v, k) => {
-  //     if(v.size > 0) {
-  //       v.forEach((iv, ik) => {
-  //         if(out.has(ik)) {
-  //           let value = out.get(ik)
-  //
-  //           out.set(ik, (value + iv)/2)
-  //         }
-  //         else {
-  //           out.set(ik, iv)
-  //         }
-  //       })
-  //     }
-  //   })
-  //
-  //   this.brushing = out;
-  // }
-
 
   initChart() {
     let self = this;
@@ -275,7 +192,7 @@ export class Splom {
           .on("end", brushend)
           .extent([[0,0],[this.size,this.size]]);
 
-      var xAxis = d3.axisBottom(this.x)
+      var xAxis = d3.axisTop(this.x)
           .ticks(6);
 
       var yAxis = d3.axisLeft(this.y)
@@ -288,15 +205,27 @@ export class Splom {
           .data(traits)
         .enter().append("g")
           .attr("class", "x axis")
-          .attr("transform", function(d, i) { return "translate(" + (n - i - 1) * self.size + ",0)"; })
-          .each(function(d) { self.x.domain(self.domainByTrait[d]); d3.select(this).call(xAxis); });
+          .attr("transform", function(d, i) { return "translate(" + (n - i - 1) * self.size + "," + n * self.size + ")"; })
+          .each(function(d) {
+            self.x.domain(self.domainByTrait[d]);
+            d3.select(this).call(xAxis)
+            .selectAll("text")
+              .attr("y", 0)
+              .attr("x", 0)
+              .attr("transform", "rotate(-90)")
+              .style("text-anchor", "end");
+          });
 
       this.svg.selectAll(".y.axis")
           .data(traits)
         .enter().append("g")
           .attr("class", "y axis")
           .attr("transform", function(d, i) { return "translate(0," + i * self.size + ")"; })
-          .each(function(d) { self.y.domain(self.domainByTrait[d]); d3.select(this).call(yAxis); });
+          .each(function(d) {
+            self.y.domain(self.domainByTrait[d]);
+            d3.select(this)
+              .call(yAxis)
+            });
 
       var cell = self.svg.selectAll(".cell")
           .data(self.cross(traits, traits))
