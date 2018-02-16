@@ -322,7 +322,7 @@ export class Splom {
                 .attr("cx", function(d) { return self.x(d["params"][p.x]); })
                 .attr("cy", function(d) { return self.y(d["params"][p.y]); })
                 .attr("r", 3)
-                .style("fill", function(d) { return "#160B39"; });
+                .style("fill", function(d) { return "#482475"; });
           });
 
       // Titles for the diagonal.

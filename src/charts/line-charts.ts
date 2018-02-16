@@ -203,7 +203,7 @@ export class LineCharts {
     // Reset charts map
     this.charts = new Map();
 
-    this.color_viridis = d3.scaleSequential(d3.interpolateInferno)
+    this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
       .domain([0, 1])
 
     this.quantize = d3.scaleQuantize()
@@ -531,7 +531,7 @@ export class LineCharts {
             }
           })
 
-          if(b.length < 1) return 0;
+          if(opacity <= 0) return "#d3d3d3";
 
           return self.quantize(opacity / counter)
         })
@@ -636,7 +636,7 @@ export class LineCharts {
       this.dimensions.forEach(dim => {
         let line = new PIXI.Graphics();
         line.lineStyle(1, 0xffffff, 1);
-        line.tint = parseInt("#160B39".substring(1), 16)
+        line.tint = parseInt("#482475".substring(1), 16)
         line.blendMode = PIXI.BLEND_MODES.NORMAL
 
         for(let i = 0; i < d["data"].length-1; i++) {

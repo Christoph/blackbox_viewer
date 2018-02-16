@@ -56,7 +56,7 @@
 }
 
 circle {
-  stroke: #160B39;
+  stroke: #482475;
   stroke-width: 0.1px;
 }
 
@@ -81,7 +81,7 @@ circle.hidden {
 
 .line {
   fill: none;
-  stroke: #160B39;
+  stroke: #482475;
   stroke-width: 1.5px;
   shape-rendering: auto;
 }
@@ -89,7 +89,7 @@ circle.hidden {
 .line_parallel {
   cursor: pointer;
   fill: none;
-  stroke: #160B39;
+  stroke: #482475;
   stroke-width: 1.5px;
   shape-rendering: auto;
 }
@@ -97,7 +97,7 @@ circle.hidden {
 .line_parallel.selected {
   cursor: pointer;
   fill: none;
-  stroke: #160B39;
+  stroke: #482475;
   stroke-width: 3px;
   shape-rendering: auto;
 }
@@ -132,9 +132,9 @@ circle.hidden {
 }
 
 rect.bar {
-  fill: #160B39;
+  fill: #482475;
 }
 
 rect.bar-parallel {
-  fill: #160B39;
+  fill: #482475;
 }

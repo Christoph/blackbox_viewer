@@ -155,7 +155,7 @@ export class parallelBarCharts {
     this.parcoords =
       this.chart.append("g")
 
-    this.color_viridis = d3.scaleSequential(d3.interpolateInferno)
+    this.color_viridis = d3.scaleSequential(d3.interpolateViridis)
       .domain([0, 1])
     this.color_plasma = d3.scaleSequential(d3.interpolatePlasma)
       .domain([0, 1])
@@ -217,29 +217,6 @@ export class parallelBarCharts {
           let opacity = 0;
           let counter = 0;
 
-          // this.charts[dim].selectAll(".bar-parallel")
-          //   .attr("opacity", function(bar) {
-          //     self.data.forEach((d) => {
-          //       let value = d["data"][dim];
-          //
-          //       if(value >= bar.x0 && value <= bar.x1) {
-          //         counter++;
-          //         opacity += d["highlight"]
-          //       }
-          //     })
-          //
-          //     if(bar.length < 1) return 0;
-          //
-          //     if(opacity > 0) return self.quantize_opacity(opacity / counter)
-          //     else return 0
-          //   })
-
-          // this.svg.selectAll(".line")
-          //   .attr("opacity", function(d) {
-          //     return d["highlight"]
-          //   })
-          //   .moveToBack()
-
           this.charts[dim].selectAll(".bar-parallel")
             .style("fill", function(bar) {
               let opacity = 0;
@@ -254,9 +231,13 @@ export class parallelBarCharts {
                 }
               })
 
-              if(bar.length < 1) return 0;
+              if(opacity <= 0) {
+                return "#d3d3d3"
+              }
+              else {
+                return self.quantize(opacity / counter)
+              }
 
-              return self.quantize(opacity / counter)
             })
 
           this.svg.selectAll(".line_parallel")
@@ -264,46 +245,6 @@ export class parallelBarCharts {
               return d["color"]
             })
             .moveToBack()
-        }
-        else if(this.mode = "Color-Viridis") {
-          this.charts[dim].selectAll(".bar-parallel")
-          .style("fill", function(bar) {
-            let opacity = 0;
-            let counter = 0;
-
-            self.data.forEach((d) => {
-              let value = d["params"][dim];
-
-              if(value >= bar.x0 && value <= bar.x1) {
-                counter++;
-                opacity += d["highlight"]
-              }
-            })
-
-            if(bar.length < 1) return 0;
-
-            return self.color_viridis(opacity / counter)
-          })
-        }
-        else if(this.mode = "Color-Plasma") {
-          this.charts[dim].selectAll(".bar-parallel")
-          .style("fill", function(bar) {
-            let opacity = 0;
-            let counter = 0;
-
-            self.data.forEach((d) => {
-              let value = d["params"][dim];
-
-              if(value >= bar.x0 && value <= bar.x1) {
-                counter++;
-                opacity += d["highlight"]
-              }
-            })
-
-            if(bar.length < 1) return 0;
-
-            return self.color_plasma(opacity / counter)
-          })
         }
     }
   }
@@ -415,7 +356,7 @@ export class parallelBarCharts {
         .attr("height", (d) => {
           return this.chart_height - this.y[dim](d.length); })
         .attr("width", (d) => {
-          return this.x[dim](d.x1) - this.x[dim](d.x0);
+          return this.x[dim](d.x1) - this.x[dim](d.x0) -1;
         })
 
       // Add and store a brush for each axis.
