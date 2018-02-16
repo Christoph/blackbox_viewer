@@ -346,7 +346,7 @@ export class parallelBarCharts {
       })
 
       this.x[dim] = d3.scaleLinear()
-        .range([this.width, 0])
+        .range([0, this.width])
         .domain([ext[0], ext[1]])
 
       let focus_data = this.data.map(a => a["params"][dim])
@@ -405,13 +405,13 @@ export class parallelBarCharts {
       bar_chart.enter().append("rect")
         .attr("class", "bar-parallel")
         .attr("transform", (d) => {
-          return "translate(" + (this.x[dim](d.x1)) + ", " + (this.y[dim](d.length)) + ")";
+          return "translate(" + (this.x[dim](d.x0)) + ", " + (this.y[dim](d.length)) + ")";
         })
         .attr("x", 1)
         .attr("height", (d) => {
           return this.chart_height - this.y[dim](d.length); })
         .attr("width", (d) => {
-          return this.x[dim](d.x0) - this.x[dim](d.x1) - 1;
+          return this.x[dim](d.x1) - this.x[dim](d.x0);
         })
 
       // Add and store a brush for each axis.

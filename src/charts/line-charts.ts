@@ -512,6 +512,7 @@ export class LineCharts {
           // x.tint = parseInt("f5f6f8", 16);
         }
         else {
+          // x.lineStyle(1, parseInt("#ffffff".substring(1), 16), 1);
           x.alpha = 1;
           x.tint = parseInt(color.substring(1), 16);
         }
@@ -635,7 +636,8 @@ export class LineCharts {
     .forEach(d => {
       this.dimensions.forEach(dim => {
         let line = new PIXI.Graphics();
-        line.lineStyle(1, 0x4682b4, 1);
+        line.lineStyle(1, 0xffffff, 1);
+        line.tint = parseInt("#000000".substring(1), 16)
         line.blendMode = PIXI.BLEND_MODES.NORMAL
 
         for(let i = 0; i < d["data"].length-1; i++) {
