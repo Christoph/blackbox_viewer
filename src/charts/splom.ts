@@ -6,7 +6,7 @@ import { inject, noView, bindable, bindingMode, BindingEngine } from 'aurelia-fr
 @noView()
 export class Splom {
   // One-Way
-  @bindable margin = { top: 25, right: 0, bottom: 35, left: 60, padding: 20 };
+  @bindable margin = { top: 25, right: 40, bottom: 35, left: 40, padding: 20 };
   @bindable size = 50;
   @bindable redraw = 0;
   @bindable reset = 0;

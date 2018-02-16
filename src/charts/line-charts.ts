@@ -54,6 +54,7 @@ export class LineCharts {
   private quantize_opacity;
   private weight_to_highlight;
   private lineGenerator;
+  private brush_active = false;
 
   // set the dimensions and margins of the graph
   private width;
@@ -270,6 +271,7 @@ export class LineCharts {
           self.updateBrush(dim);
           self.resolve_brushing(dim, true);
 
+          self.brush_active = true;
           brushing = true;
         })
         .on("mousemove", _.throttle(updateBrushing, 50))
@@ -365,6 +367,7 @@ export class LineCharts {
           .on("click", x => {
             self.charts.get(dim).focus.selectAll("path.focusline").remove()
             self.resolve_brushing(dim, false)
+            self.brush_active = false;
           })
 
         // add the x Axis
@@ -484,6 +487,7 @@ export class LineCharts {
       .attr("height", (d) => {
         return this.y.get(dim)(d.x0) - this.y.get(dim)(d.x1) - 1;
       })
+      .moveToBack();
 
     focus_chart.enter().append("text")
       .attr("class", "text")
@@ -495,9 +499,12 @@ export class LineCharts {
       .text(function(d) {
         if(d.length > 0 && d.length < 10) return d.length
       })
+      .moveToBack();
 
-    this.resolve_brushing(dim, true);
-    this.updateHighlight(dim)
+    if(this.brush_active) {
+      this.resolve_brushing(dim, true);
+      this.updateHighlight(dim)
+    }
   }
 
   updateHighlight(dim) {
@@ -652,7 +659,7 @@ export class LineCharts {
         .attr("height", (d) => {
           return this.y.get(dim)(d.x0) - this.y.get(dim)(d.x1) - 1;
         })
-        // .moveToBack();
+        .moveToBack();
 
       focus_chart.enter().append("text")
         .attr("class", "text")
@@ -663,6 +670,7 @@ export class LineCharts {
         .text(function(d) {
           if(d.length > 0 && d.length < 10) return d.length
         })
+        .moveToBack();
     })
 
 
