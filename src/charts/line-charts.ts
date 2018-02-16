@@ -365,7 +365,7 @@ export class LineCharts {
 
         // y axis label
         linechart.append("text")
-          .style("text-anchor", "middle")
+          .style("text-anchor", "start")
           .attr("y", -4)
           .text(dim);
 
@@ -376,7 +376,7 @@ export class LineCharts {
 
         // y axis label
         focus.append("text")
-          .style("text-anchor", "middle")
+          .style("text-anchor", "end")
           .attr("y", -4)
           .attr("x", this.focus_width)
           .text(dim);
