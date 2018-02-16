@@ -1,6 +1,5 @@
 import { autoinject, observable } from 'aurelia-framework';
 import * as d3 from "d3"
-import * as PIXI from "pixi.js"
 import {exampleData} from "../resources/example-data"
 
 @autoinject
@@ -95,57 +94,7 @@ export class Gauss {
     this.resetInputChart = this.resetInputChart == 0 ? 1 : 0;
   }
 
-  app = new PIXI.Application({
-    width: 500,
-    height: 300,
-    transparent: true
-  });
-
-  scale_x = d3.scaleLinear()
-    .range([0, 500])
-
-  scale_y = d3.scaleLinear()
-    .range([300, 0])
-
-  changeColor() {
-    this.app.stage.children.forEach(x => {
-      x.tint = 0x000000;
-    })
-  }
-
   visualize() {
-    let line_data = []
-    for (let i = 0; i < this.data.length; i++) {
-      let d = this.data[i]
-      let temp = []
-
-      d.data.forEach( x => {
-        temp.push([x["time"], x["Start_shedding"]])
-      })
-
-      line_data.push(temp)
-    }
-
-    this.scale_x.domain([+d3.min(line_data[0], x => x[0]) ,+d3.max(line_data[0], x => x[0])])
-    this.scale_y.domain([+d3.min(line_data[0], x => x[1]) ,+d3.max(line_data[0], x => x[1])])
-
-    console.time("webgl")
-    document.body.appendChild(this.app.view);
-
-    line_data.forEach(d => {
-      let line = new PIXI.Graphics();
-      line.lineStyle(1, 0x888888, 1);
-
-      for(let i = 0; i < d.length-1; i++) {
-        line.moveTo(this.scale_x(d[i][0]),this.scale_y(d[i][1]));
-        line.lineTo(this.scale_x(d[i+1][0]),this.scale_y(d[i+1][1]));
-      }
-
-      this.app.stage.addChild(line);
-    })
-
-    console.timeEnd("webgl")
-
     this.resetChart = this.resetChart == 0 ? 1 : 0;
     this.resetInputChart = this.resetInputChart == 0 ? 1 : 0;
 
