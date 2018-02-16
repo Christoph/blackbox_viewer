@@ -508,8 +508,8 @@ export class LineCharts {
         let color = this.id_color.get(this.line_id.get(dim).get(x))
 
         if(color == "none") {
-          x.alpha = 1;
-          x.tint = parseInt("d3d3d3", 16);
+          x.alpha = 0;
+          // x.tint = parseInt("d3d3d3", 16);
         }
         else {
           x.alpha = 1;
