@@ -40,6 +40,7 @@ export class parallelBarChartsWebgl {
   private chart_height;
   private chart_offset;
   private brushes = new Map();
+  private ranges = new Map();
   private quantize;
   private quantize_opacity;
   private line_data = [];
@@ -119,32 +120,76 @@ export class parallelBarChartsWebgl {
     }));
   }
 
-  private removeBrushing = (dim) => {
-    this.brushes.delete(dim)
-
+  private resolve_brushing = () => {
     let brushed = _.intersection(...Array.from(this.brushes.values()));
 
-    if (this.brushes.size > 0 && brushed.length == 0) {
-      brushed.push("x")
+    if(this.brushes.size == 0) {
+      this.reset_brush_webgl();
     }
+    else {
+      this.brush_webgl(brushed);
+    }
+  }
 
-    this.brushing = brushed;
+  private update_brushing = () => {
+    this.ranges.forEach((v, k) => {
+     let brushed_elements = this.data.filter(x => x["params"][k] >= v[0] && x["params"][k] <= v[1] && x["color"] != "none").map(x => x.id)
+     this.brushes.set(k, brushed_elements)
+    })
+
+    let brushed = _.intersection(...Array.from(this.brushes.values()));
+    this.brush_webgl(brushed);
+
+    if(this.brushes.size == 0) {
+      this.reset_brush_webgl();
+    }
+  }
+
+  private removeBrushing = (dim) => {
+    this.brushes.delete(dim)
+    this.ranges.delete(dim)
+
+    this.resolve_brushing();
   }
 
   // Update external variables with current brushes
-  private getBrushing = (dim, low, high) => {
-    let brushed_elements = this.data.filter(x => x["params"][dim] >= low && x["params"][dim] <= high).map(x => x.id)
+  private getBrushing = (dim, high, low) => {
+    let brushed_elements = this.data.filter(x => x["params"][dim] >= low && x["params"][dim] <= high && x["color"] != "none").map(x => x.id)
     this.brushes.set(dim, brushed_elements)
+    this.ranges.set(dim, [low, high]);
 
     let brushed = _.intersection(...Array.from(this.brushes.values()));
 
-    // If no element is brushed return a x to let the system know that
-    // there are brushes active
-    if (this.brushes.size > 0 && brushed.length == 0) {
-      brushed.push("x")
-    }
+    this.resolve_brushing();
+  }
 
-    this.brushing = brushed;
+  brush_webgl = (ids) => {
+    this.container.children.forEach(x => {
+      let color = this.id_color.get(this.line_id.get(x))
+      let id = this.line_id.get(x)
+
+      if(ids.includes(id)) {
+        x.alpha = 1;
+        x.tint = parseInt(color.substring(1), 16);
+      }
+      else {
+        x.alpha = 0;
+      }
+    })
+  }
+
+  reset_brush_webgl = () => {
+    this.container.children.forEach(x => {
+      let color = this.id_color.get(this.line_id.get(x))
+
+      if(color == "none") {
+        x.alpha = 0;
+      }
+      else {
+        x.alpha = 1;
+        x.tint = parseInt(color.substring(1), 16);
+      }
+    })
   }
 
   initChart() {
@@ -159,7 +204,8 @@ export class parallelBarChartsWebgl {
       width: this.width + this.margin.left + this.margin.right,
       height: this.height + this.margin.top + this.margin.bottom,
       transparent: true,
-      antialias: true
+      antialias: true,
+      interactive: true
     });
 
     this.svg = d3.select(this.element)
@@ -167,6 +213,7 @@ export class parallelBarChartsWebgl {
       .style("position", "absolute")
       .style("top", 0)
       .style("left", 0)
+      .attr("pointer-events", "none")
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom)
       .on("click", function(d) {
@@ -220,6 +267,10 @@ export class parallelBarChartsWebgl {
   updateHighlight() {
     let self = this;
 
+    // Update webgl elements
+    this.update_brushing();
+
+    // Update d3 elements
     for (var dim in this.charts) {
       if(this.mode == "Opacity") {
         this.charts[dim].selectAll(".bar-parallel")
@@ -248,19 +299,6 @@ export class parallelBarChartsWebgl {
             .moveToBack()
         }
         else if(this.mode = "Opacity + Viridis") {
-          this.container.children.forEach(x => {
-            let color = this.id_color.get(this.line_id.get(x))
-
-            if(color == "none") {
-              x.alpha = 0;
-              // x.tint = parseInt("d3d3d3", 16);
-            }
-            else {
-              x.alpha = 1;
-              x.tint = parseInt(color.substring(1), 16);
-            }
-          })
-
           let opacity = 0;
           let counter = 0;
 
@@ -459,9 +497,8 @@ export class parallelBarChartsWebgl {
       })
 
       let line = new PIXI.Graphics();
-      line.lineStyle(1, 0xffffff, 1);
+      line.lineStyle(2, 0xffffff, 1);
       line.tint = parseInt("#d3d3d3".substring(1), 16)
-      line.blendMode = PIXI.BLEND_MODES.NORMAL
 
       for(let i = 0; i < line_data.length-1; i++) {
         line.moveTo(line_data[i][0],line_data[i][1]);
@@ -473,7 +510,6 @@ export class parallelBarChartsWebgl {
           line_data[i+1][0],
           line_data[i+1][1]
         );
-        // line.lineTo(line_data[i+1][0],line_data[i+1][1]);
       }
 
       this.container.addChild(line);
