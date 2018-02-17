@@ -346,6 +346,11 @@ export class parallelBarChartsWebgl {
 
     this.chart_height = (this.height - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.middle))/this.dimensions.length;
 
+    if(this.chart_height >= 1.5 * this.margin.middle) {
+      this.margin.middle = Math.floor(this.margin.middle * 1.5)
+      this.chart_height = (this.height - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.middle))/this.dimensions.length;
+    }
+
     this.line_data.length = 0
     this.dimensions.forEach((x, i) => {
       if(i == 0) {
