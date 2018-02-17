@@ -54,7 +54,7 @@ export class LineCharts {
   private quantize_opacity;
   private weight_to_highlight;
   private lineGenerator;
-  private brush_active = false;
+  private brush_active = new Map();
 
   // set the dimensions and margins of the graph
   private width;
@@ -191,9 +191,10 @@ export class LineCharts {
       return d != this.x_attribute
     });
 
-    // Initialize id color Map
+    // Initialize id color Map and active brushes
     this.dimensions.forEach(dim => {
       this.line_id.set(dim, new Map())
+      this.brush_active.set(dim, false)
     })
 
     // Set height value
@@ -272,7 +273,7 @@ export class LineCharts {
           self.updateBrush(dim);
           self.resolve_brushing(dim, true);
 
-          self.brush_active = true;
+          self.brush_active.set(dim, true);
           brushing = true;
         })
         .on("mousemove", _.throttle(updateBrushing, 50))
@@ -376,7 +377,7 @@ export class LineCharts {
           .on("click", x => {
             self.charts.get(dim).focus.selectAll("path.focusline").remove()
             self.resolve_brushing(dim, false)
-            self.brush_active = false;
+            self.brush_active.set(dim, false);
           })
 
         // add the x Axis
@@ -510,7 +511,7 @@ export class LineCharts {
       })
       .moveToBack();
 
-    if(this.brush_active) {
+    if(this.brush_active.get(dim)) {
       this.resolve_brushing(dim, true);
       this.updateHighlight(dim)
     }
