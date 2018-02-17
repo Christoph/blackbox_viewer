@@ -315,8 +315,16 @@ export class LineCharts {
                 .attr("x", d3.event.x - 10)
             }
 
+            let closest = self.x_values.reduce(function(prev, curr) {
+              return (Math.abs(curr - self.x.invert(d3.event.x)) < Math.abs(prev - self.x.invert(d3.event.x)) ? curr : prev);
+            });
+
+            self.selected_time = closest
+
             d3.select(this).select("text")
-              .text(Math.round(self.x.invert(d3.event.x)))
+              .text(self.selected_time)
+
+            self.updateBars(dim);
           })
           .on('end', function() {
             let closest = self.x_values.reduce(function(prev, curr) {
