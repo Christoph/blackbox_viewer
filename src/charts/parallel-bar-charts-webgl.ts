@@ -465,7 +465,15 @@ export class parallelBarChartsWebgl {
 
       for(let i = 0; i < line_data.length-1; i++) {
         line.moveTo(line_data[i][0],line_data[i][1]);
-        line.lineTo(line_data[i+1][0],line_data[i+1][1]);
+        line.bezierCurveTo(
+          line_data[i][0],
+          line_data[i+1][1],
+          line_data[i+1][0],
+          line_data[i][1],
+          line_data[i+1][0],
+          line_data[i+1][1]
+        );
+        // line.lineTo(line_data[i+1][0],line_data[i+1][1]);
       }
 
       this.container.addChild(line);
