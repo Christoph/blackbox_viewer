@@ -1,7 +1,7 @@
 <template>
     <require from="./chart.css"></require>
     <require from="../charts/line-charts"></require>
-    <require from="../charts/parallel-bar-charts"></require>
+    <require from="../charts/parallel-bar-charts-webgl"></require>
     <require from="../charts/splom"></require>
 
     <h2>Analyze Input-Output Models</h2>
@@ -82,12 +82,12 @@
               data.bind="data_charts"
               mode.bind="selected_mode"></splom>
 
-              <parallel-bar-charts if.bind="!splom_selected"
+              <parallel-bar-charts-webgl style="position: relative;" if.bind="!splom_selected"
               brushing.bind="brushing_parallel"
               redraw.bind="redraw_parallel"
               reset.bind="resetInputChart"
               data.bind="data_charts"
-              mode.bind="selected_mode"></parallel-bar-charts>
+              mode.bind="selected_mode"></parallel-bar-charts-webgl>
           </div>
         </div>
         <div class="col-md-6">

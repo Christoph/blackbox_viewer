@@ -115,7 +115,6 @@ export class LineCharts {
       this.dimensions.forEach((dim) => {
         this.updateHighlight(dim);
       })
-      console.timeEnd("redraw")
     }
   }
 
@@ -280,7 +279,6 @@ export class LineCharts {
         // .on("mousemove", updateBrushing)
         .on("mouseup", function(d) {
           brushing = false;
-          console.log("mouse up")
         })
         .on("mouseleave", function(d) {
           brushing = false;
@@ -601,8 +599,6 @@ export class LineCharts {
           return self.quantize(opacity / counter)
         })
     }
-
-    console.log("highlight done")
   }
 
   createBrush(dim) {
@@ -648,7 +644,6 @@ export class LineCharts {
 
       this.selected_time = x_max;
 
-      console.log("UPDATE")
       let focus_data = <any>[];
       this.data.forEach((d: any[]) => {
         focus_data.push(d["data"][this.selected_time][dim])
