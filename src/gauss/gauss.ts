@@ -35,6 +35,14 @@ export class Gauss {
     .domain([0, 1])
 
   initial_color = "#d3d3d3";
+  keys = new Map([
+    ["none", "n0"],
+    [this.color_viridis(0.2), "n1"],
+    [this.color_viridis(0.4), "n2"],
+    [this.color_viridis(0.6), "n3"],
+    [this.color_viridis(0.8), "n4"],
+    [this.color_viridis(1), "n5"]
+  ])
 
   quantize =  d3.scaleQuantize()
       .domain([0.1, 1.1])
@@ -110,7 +118,7 @@ export class Gauss {
 
       this.data_charts.push({
         id: i,
-        highlight: 1,
+        highlight: 0,
         color: this.initial_color,
         params: d.params,
         data: d.data
@@ -118,7 +126,7 @@ export class Gauss {
 
       this.data_lines_original.push({
         id: i,
-        highlight: 1,
+        highlight: 0,
         color: this.initial_color,
         params: d.params,
         data: d.data
@@ -130,15 +138,50 @@ export class Gauss {
         return data["params"][dim];
       })
 
-      let focus_data = this.data.map(a => a["params"][dim])
+      let focus_data = this.data_charts.map(a => {
+        return {
+          value: a["params"][dim],
+          highlight: a["highlight"],
+          color: a["color"]
+        }
 
-      this.bins[dim] = d3.histogram()
-        .domain([ext[0], ext[1]])
-        .thresholds(d3.range(ext[0], ext[1], (ext[1] - ext[0]) / 20))
-        (focus_data);
+      })
+
+      let bin_count = 20;
+      let borders = d3.range(ext[0], ext[1], (ext[1] - ext[0]) / bin_count)
+      borders.push(ext[1])
+
+      let bins = []
+      borders.forEach((x, i) => {
+        if(i <= bin_count - 1) {
+          let bucket = []
+          bucket["x0"] = borders[i]
+          bucket["x1"] = borders[i+1]
+          bucket["n0"] = 0
+          bucket["n1"] = 0
+          bucket["n2"] = 0
+          bucket["n3"] = 0
+          bucket["n4"] = 0
+          bucket["n5"] = 0
+
+          bins.push(bucket)
+        }
+      })
+
+      focus_data.forEach(x => {
+        for(let i = 0; i < borders.length; i++) {
+          if(borders[i] > x.value) {
+            bins[i - 1].push(x)
+            if(x.highlight == 0) {
+              bins[i - 1][this.keys.get("none")] += 1;
+            }
+            break;
+          }
+        }
+      })
+
+      this.bins[dim] = bins
     })
-
-    console.log(this.bins)
 
     this.data_length = this.data_lines_original.length;
     this.filterOutData([])
@@ -193,6 +236,60 @@ export class Gauss {
           x.highlight = 0;
           x.color = this.initial_color;
         }
+      })
+
+      // Update bins
+      this.params.map((dim) => {
+        let ext = <any>d3.extent(this.data, (data) => {
+          return data["params"][dim];
+        })
+
+        let focus_data = this.data_charts.map(a => {
+          return {
+            value: a["params"][dim],
+            highlight: a["highlight"],
+            color: a["color"]
+          }
+
+        })
+
+        let bin_count = 20;
+        let borders = d3.range(ext[0], ext[1], (ext[1] - ext[0]) / bin_count)
+        borders.push(ext[1])
+
+        let bins = []
+        borders.forEach((x, i) => {
+          if(i <= bin_count - 1) {
+            let bucket = []
+            bucket["x0"] = borders[i]
+            bucket["x1"] = borders[i+1]
+            bucket["n0"] = 0
+            bucket["n1"] = 0
+            bucket["n2"] = 0
+            bucket["n3"] = 0
+            bucket["n4"] = 0
+            bucket["n5"] = 0
+
+            bins.push(bucket)
+          }
+        })
+
+        focus_data.forEach(x => {
+          for(let i = 0; i < borders.length; i++) {
+            if(borders[i] > x.value) {
+              bins[i - 1].push(x)
+              if(x.highlight == 0) {
+                bins[i - 1][this.keys.get("none")] += 1;
+              }
+              else {
+                bins[i - 1][this.keys.get(x.color)] += 1;
+              }
+              break;
+            }
+          }
+        })
+
+        this.bins[dim] = bins
       })
 
       // this.data_charts.sort(function(x, y){
