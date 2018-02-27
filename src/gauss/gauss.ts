@@ -7,6 +7,8 @@ export class Gauss {
   file;
   data;
   dimensions = [];
+  params = [];
+  bins = {};
   selected_dim = "";
   dim_not_selected = true;
   data_not_loaded = true;
@@ -122,6 +124,21 @@ export class Gauss {
         data: d.data
       })
     }
+
+    this.params.map((dim) => {
+      let ext = <any>d3.extent(this.data, (data) => {
+        return data["params"][dim];
+      })
+
+      let focus_data = this.data.map(a => a["params"][dim])
+
+      this.bins[dim] = d3.histogram()
+        .domain([ext[0], ext[1]])
+        .thresholds(d3.range(ext[0], ext[1], (ext[1] - ext[0]) / 20))
+        (focus_data);
+    })
+
+    console.log(this.bins)
 
     this.data_length = this.data_lines_original.length;
     this.filterOutData([])
@@ -248,6 +265,10 @@ export class Gauss {
       if ("params" in this.data[0] && "data" in this.data[0]) {
         // Get y values
         this.dimensions = d3.keys(this.data[0]["data"][0]).filter((d) => {
+          return d
+        });
+
+        this.params = d3.keys(this.data[0]["params"]).filter((d) => {
           return d
         });
 

@@ -18,6 +18,7 @@ export class parallelBarChartsWebgl {
 
   // Observed Variables
   @bindable data = [];
+  @bindable bins = {};
 
   // Aurelia variables
   private element;
@@ -30,7 +31,6 @@ export class parallelBarChartsWebgl {
   private x = {};
   private y = {};
   private y_lines;
-  private bins = {};
   private charts = {};
   private dimensions = <any>[];
   private line;
@@ -383,13 +383,6 @@ export class parallelBarChartsWebgl {
       this.x[dim] = d3.scaleLinear()
         .range([0, this.width])
         .domain([ext[0], ext[1]])
-
-      let focus_data = this.data.map(a => a["params"][dim])
-
-      this.bins[dim] = d3.histogram()
-        .domain(this.x[dim].domain())
-        .thresholds(d3.range(ext[0], ext[1], (ext[1] - ext[0]) / 20))
-        (focus_data);
 
       this.y[dim] = d3.scaleLinear()
         .range([0, this.chart_height])
