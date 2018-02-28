@@ -157,12 +157,12 @@ export class Gauss {
           let bucket = []
           bucket["x0"] = borders[i]
           bucket["x1"] = borders[i+1]
-          bucket["n0"] = 0
-          bucket["n1"] = 0
-          bucket["n2"] = 0
-          bucket["n3"] = 0
-          bucket["n4"] = 0
-          bucket["n5"] = 0
+          bucket["n0"] = { value: 0, color: "#d3d3d3"}
+          bucket["n1"] = { value: 0, color: this.color_viridis(0.2)}
+          bucket["n2"] = { value: 0, color: this.color_viridis(0.4)}
+          bucket["n3"] = { value: 0, color: this.color_viridis(0.6)}
+          bucket["n4"] = { value: 0, color: this.color_viridis(0.8)}
+          bucket["n5"] = { value: 0, color: this.color_viridis(1)}
 
           bins.push(bucket)
         }
@@ -173,7 +173,7 @@ export class Gauss {
           if(borders[i] >= x.value) {
             bins[i - 1].push(x)
             if(x.highlight == 0) {
-              bins[i - 1][this.keys.get("none")] += 1;
+              bins[i - 1][this.keys.get("none")]["value"] += 1;
             }
             break;
           }
@@ -263,12 +263,12 @@ export class Gauss {
             let bucket = []
             bucket["x0"] = borders[i]
             bucket["x1"] = borders[i+1]
-            bucket["n0"] = 0
-            bucket["n1"] = 0
-            bucket["n2"] = 0
-            bucket["n3"] = 0
-            bucket["n4"] = 0
-            bucket["n5"] = 0
+            bucket["n0"] = { value: 0, color: "#d3d3d3"}
+            bucket["n1"] = { value: 0, color: this.color_viridis(0.2)}
+            bucket["n2"] = { value: 0, color: this.color_viridis(0.4)}
+            bucket["n3"] = { value: 0, color: this.color_viridis(0.6)}
+            bucket["n4"] = { value: 0, color: this.color_viridis(0.8)}
+            bucket["n5"] = { value: 0, color: this.color_viridis(1)}
 
             bins.push(bucket)
           }
@@ -279,10 +279,10 @@ export class Gauss {
             if(borders[i] >= x.value) {
               bins[i - 1].push(x)
               if(x.highlight == 0) {
-                bins[i - 1][this.keys.get("none")] += 1;
+                bins[i - 1][this.keys.get("none")]["value"] += 1;
               }
               else {
-                bins[i - 1][this.keys.get(x.color)] += 1;
+                bins[i - 1][this.keys.get(x.color)]["value"] += 1;
               }
               break;
             }
@@ -292,7 +292,6 @@ export class Gauss {
         this.bins[dim] = bins
       })
 
-      console.log(this.bins)
 
 
       // this.data_charts.sort(function(x, y){

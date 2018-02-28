@@ -337,16 +337,16 @@ export class parallelBarChartsWebgl {
                 .transition()
                 .duration(200)
                 .attr("y", function(k) {
-                  let position = (self.chart_height - new_start_point) - (self.chart_height - self.y[dim](d[k]));
-                  if(d[k] > 0) new_start_point += (self.chart_height - self.y[dim](d[k]));
+                  let position = (self.chart_height - new_start_point) - (self.chart_height - self.y[dim](d[k]["value"]));
+                  if(d[k]["value"] > 0) new_start_point += (self.chart_height - self.y[dim](d[k]["value"]));
                   return position
                 })
                 .attr("height", function(k) {
-                  return self.chart_height - self.y[dim](d[k]);
+                  return self.chart_height - self.y[dim](d[k]["value"])
                 })
-                // .attr("width", function(k) {
-                //   return self.x[dim](d["x1"]) - self.x[dim](d["x0"]) - 1;
-                // })
+                .style("fill", function(k) {
+                  return d[k]["color"]
+                })
             })
         }
     }
@@ -483,13 +483,13 @@ export class parallelBarChartsWebgl {
             .append("rect")
             .attr("class", "bar-parallel")
             .attr("y", function(k) {
-              let position = (self.chart_height - new_start_point) - (self.chart_height - self.y[dim](d[k]));
+              let position = (self.chart_height - new_start_point) - (self.chart_height - self.y[dim](d[k]["value"]));
               if(d[k] > 0) new_start_point = position;
               return position
             })
             // .attr("y", y => this.y[dim](y.length))
             .attr("height", function(k) {
-              return self.chart_height - self.y[dim](d[k]); })
+              return self.chart_height - self.y[dim](d[k]["value"]); })
             .attr("width", function(k) {
               return self.x[dim](d["x1"]) - self.x[dim](d["x0"]) - 1;
             })
