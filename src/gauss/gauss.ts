@@ -169,8 +169,8 @@ export class Gauss {
       })
 
       focus_data.forEach(x => {
-        for(let i = 0; i < borders.length; i++) {
-          if(borders[i] > x.value) {
+        for(let i = 1; i < borders.length; i++) {
+          if(borders[i] >= x.value) {
             bins[i - 1].push(x)
             if(x.highlight == 0) {
               bins[i - 1][this.keys.get("none")] += 1;
@@ -275,8 +275,8 @@ export class Gauss {
         })
 
         focus_data.forEach(x => {
-          for(let i = 0; i < borders.length; i++) {
-            if(borders[i] > x.value) {
+          for(let i = 1; i < borders.length; i++) {
+            if(borders[i] >= x.value) {
               bins[i - 1].push(x)
               if(x.highlight == 0) {
                 bins[i - 1][this.keys.get("none")] += 1;
@@ -291,6 +291,9 @@ export class Gauss {
 
         this.bins[dim] = bins
       })
+
+      console.log(this.bins)
+
 
       // this.data_charts.sort(function(x, y){
       //    return d3.ascending(x.highlight, y.highlight);

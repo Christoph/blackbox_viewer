@@ -302,34 +302,52 @@ export class parallelBarChartsWebgl {
           let opacity = 0;
           let counter = 0;
 
-          this.charts[dim].selectAll(".bar-parallel")
-            .style("fill", function(bar) {
-              let opacity = 0;
-              let counter = 0;
-
-              self.data.forEach((d: any[]) => {
-                let value = d["params"][dim];
-
-                if(value >= bar.x0 && value <= bar.x1) {
-                  counter++;
-                  opacity += d["highlight"]
-                }
-              })
-
-              if(opacity <= 0) {
-                return "#d3d3d3"
-              }
-              else {
-                return self.quantize(opacity / counter)
-              }
-
-            })
+          // this.charts[dim].selectAll(".bar-parallel")
+          //   .style("fill", function(bar) {
+          //     let opacity = 0;
+          //     let counter = 0;
           //
-          // this.svg.selectAll(".line_parallel")
-          //   .style("stroke", function(d) {
-          //     return d["color"]
+          //     self.data.forEach((d: any[]) => {
+          //       let value = d["params"][dim];
+          //
+          //       if(value >= bar.x0 && value <= bar.x1) {
+          //         counter++;
+          //         opacity += d["highlight"]
+          //       }
+          //     })
+          //
+          //     if(opacity <= 0) {
+          //       return "#d3d3d3"
+          //     }
+          //     else {
+          //       return self.quantize(opacity / counter)
+          //     }
+          //
           //   })
-          //   .moveToBack()
+
+          this.charts[dim].selectAll(".bucket")
+            .data(this.bins[dim])
+            // .attr("transform", (d) => {
+            //   return "translate(" + (self.x[dim](d.x0) + 1) + ", 0)";
+            // })
+            .each(function(d, i) {
+              let new_start_point = 0;
+              d3.select(this).selectAll(".bar-parallel")
+                .data(["n5", "n4", "n3", "n2", "n1", "n0"])
+                .transition()
+                .duration(200)
+                .attr("y", function(k) {
+                  let position = (self.chart_height - new_start_point) - (self.chart_height - self.y[dim](d[k]));
+                  if(d[k] > 0) new_start_point += (self.chart_height - self.y[dim](d[k]));
+                  return position
+                })
+                .attr("height", function(k) {
+                  return self.chart_height - self.y[dim](d[k]);
+                })
+                // .attr("width", function(k) {
+                //   return self.x[dim](d["x1"]) - self.x[dim](d["x0"]) - 1;
+                // })
+            })
         }
     }
   }
@@ -385,8 +403,8 @@ export class parallelBarChartsWebgl {
         .domain([ext[0], ext[1]])
 
       this.y[dim] = d3.scaleLinear()
-        .range([0, this.chart_height])
-        .domain([d3.max(this.bins[dim], (d: any[]) => d.length), 0]);
+        .range([this.chart_height, 0])
+        .domain([0, d3.max(this.bins[dim], (d: any[]) => d.length)]);
 
       // Create drawing area
       let g = this.chart.append("g")
@@ -427,20 +445,56 @@ export class parallelBarChartsWebgl {
           .attr("x", -(this.chart_height)/2)
           .text(dim);
 
-      let bar_chart = g.selectAll("rect.bars")
+      let bar_chart = g.selectAll(".bucket")
         .data(this.bins[dim])
 
-      bar_chart.enter().append("rect")
-        .attr("class", "bar-parallel")
+      // bar_chart.enter().append("rect")
+      //   .attr("class", "bar-parallel")
+      //   .attr("x", x => this.x[dim](x.x0) + 1)
+      //   .attr("y", y => this.y[dim](y.length))
+      //   .attr("height", (d) => {
+      //     return this.chart_height - this.y[dim](d.length); })
+      //   .attr("width", (d) => {
+      //     return this.x[dim](d.x1) - this.x[dim](d.x0) -1;
+      //   })
+
+      // bar_chart.enter().append("text")
+      //   .attr("class", "bar-text")
+      //   .attr("transform", (d) => {
+      //     // return "translate(" + (this.x[dim](d.x0)) + ", " + (this.chart_height - this.y[dim](d.length)) + ")";
+      //     return "translate(" + (this.x[dim](d.x0)) + ", 0)";
+      //   })
+      //   .attr("x", 1)
+      //   .attr("y", 0)
+      //   .text(x => x.length)
+
+      bar_chart.enter()
+        .append("g")
+        .attr("class", "bucket")
         .attr("transform", (d) => {
-          return "translate(" + (this.x[dim](d.x0)) + ", " + (this.y[dim](d.length)) + ")";
+          // return "translate(" + (self.x[dim](d.x0) + 1) + ", " + self.y[dim](d.length) + ")";
+          return "translate(" + (self.x[dim](d.x0) + 1) + ", 0)";
         })
-        .attr("x", 1)
-        .attr("height", (d) => {
-          return this.chart_height - this.y[dim](d.length); })
-        .attr("width", (d) => {
-          return this.x[dim](d.x1) - this.x[dim](d.x0) -1;
+        .each(function(d, i) {
+          let new_start_point = 0;
+          d3.select(this).selectAll(".bar-parallel")
+            .data(["n5", "n4", "n3", "n2", "n1", "n0"])
+            .enter()
+            .append("rect")
+            .attr("class", "bar-parallel")
+            .attr("y", function(k) {
+              let position = (self.chart_height - new_start_point) - (self.chart_height - self.y[dim](d[k]));
+              if(d[k] > 0) new_start_point = position;
+              return position
+            })
+            // .attr("y", y => this.y[dim](y.length))
+            .attr("height", function(k) {
+              return self.chart_height - self.y[dim](d[k]); })
+            .attr("width", function(k) {
+              return self.x[dim](d["x1"]) - self.x[dim](d["x0"]) - 1;
+            })
         })
+
 
       // Add and store a brush for each axis.
       g.append("g")
