@@ -92,9 +92,18 @@
           </div>
         </div>
         <div class="col-md-6">
-          <div class="btn-group" style="float: right;">
-            <button disabled.bind="no_selection" click.delegate="removeSelection()" type="button" class="btn btn-danger">Remove Selection</button>
-            <button disabled.bind="no_filter" click.delegate="resetSelection()" type="button" class="btn btn-warning">Reset Selection</button>
+          <div class="row">
+            <div class="col-md-6">
+              Visible Datapoints: <strong>${data_count - visible_count}/${data_count}</strong>
+              <br>
+              Selected Datapoints: <strong>${selected_count}</strong>
+            </div>
+            <div class="col-md-6">
+              <div class="btn-group" style="float: right;">
+                <button disabled.bind="no_selection" click.delegate="removeSelection()" type="button" class="btn btn-danger">Remove Selection</button>
+                <button disabled.bind="no_filter" click.delegate="resetSelection()" type="button" class="btn btn-warning">Reset Selection</button>
+              </div>
+            </div>
           </div>
           <div style="width:100%; height:800px;margin-top:35px">
             <line-charts style="position: relative;"

@@ -20,6 +20,9 @@ export class Gauss {
   no_filter = true;
   no_selection = true;
   filter = new Set();
+  visible_count = 0;
+  data_count = 0;
+  selected_count = 0;
 
   @observable brushing_parallel;
   redraw_parallel;
@@ -86,6 +89,7 @@ export class Gauss {
   restart = () => {
     this.outFilter.clear();
     this.filter.clear();
+    this.visible_count = 0;
 
     this.data_charts.length = 0
     this.data_lines_original.length = 0
@@ -166,6 +170,8 @@ export class Gauss {
       }
     })
 
+    this.selected_count = 0;
+    this.visible_count = this.filter.size;
     this.filterData();
 
     this.updateBins();
@@ -175,6 +181,8 @@ export class Gauss {
   private resetSelection() {
     this.filter.clear()
     this.data_charts.length = 0
+    this.visible_count = 0;
+    this.selected_count = 0;
 
     this.data_charts.push(...this.data_lines_original)
     this.updateBins();
@@ -200,6 +208,7 @@ export class Gauss {
     }
 
     // Set highlight and colors
+    let selected_lines = 0;
     this.data_charts
       .forEach(x => {
         let highlight = 0;
@@ -218,6 +227,8 @@ export class Gauss {
             x.color = "none"
           }
           else {
+            selected_lines++;
+
             x.highlight = this.quantize(highlight/counter);
             x.color = this.color_viridis(x.highlight);
           }
@@ -227,6 +238,8 @@ export class Gauss {
           x.color = this.initial_color;
         }
       })
+
+    this.selected_count = selected_lines;
 
     this.updateBins();
 
@@ -324,6 +337,8 @@ export class Gauss {
 
         this.data_not_loaded = false;
       }
+
+      this.data_count = this.data.length;
     }
   }
 }
