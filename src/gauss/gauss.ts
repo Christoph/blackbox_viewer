@@ -15,7 +15,7 @@ export class Gauss {
   modes = ["Opacity + Viridis", "Opacity", "Color-Plasma", "Color-Viridis"];
   input_modes = ["Parallel-Charts", "SPLOM"]
   selected_input_mode = "Parallel-Charts";
-  splom_selected = true;
+  splom_selected = false;
   selected_mode = "Opacity + Viridis";
 
   @observable brushing_parallel;
@@ -79,6 +79,7 @@ export class Gauss {
   loadExample() {
     this.data = exampleData.getExampleData()
     this.load()
+    this.visualize()
   }
 
   selectDim(dim) {
