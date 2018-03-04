@@ -75,11 +75,6 @@ export class parallelBarChartsWebgl {
 
     this.width = this.x_size - this.margin.left - this.margin.right;
     this.height = this.y_size - this.margin.top - this.margin.bottom;
-
-    // if(!this.initialized) this.initChart()
-    // if (this.data.length > 1) {
-    //   this.updateChart();
-    // }
   }
 
   // Update the chart if the data changes
@@ -194,6 +189,8 @@ export class parallelBarChartsWebgl {
   }
 
   initChart() {
+    let self = this;
+
     let canvas = d3.select(this.element)
       .append("canvas")
       .style("position", "absolute")
@@ -254,6 +251,121 @@ export class parallelBarChartsWebgl {
 
     this.line = d3.line()
       .curve(d3.curveMonotoneY);
+
+    // Get current dataset dimensions: Keys of the map
+    if (this.data.length > 0) {
+      this.dimensions = d3.keys(this.data[0]["params"]);
+    }
+
+    this.y_lines.domain(this.dimensions);
+
+    this.chart_height = (this.height - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.middle))/this.dimensions.length;
+
+    if(this.chart_height >= 1.5 * this.margin.middle) {
+      this.margin.middle = Math.floor(this.margin.middle * 1.5)
+      this.chart_height = (this.height - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.middle))/this.dimensions.length;
+    }
+
+    let margin_iterator = 0;
+
+    this.dimensions.map((dim) => {
+      let ext = <any>d3.extent(this.data, (data) => {
+        return data["params"][dim];
+      })
+
+      this.x[dim] = d3.scaleLinear()
+        .range([0, this.width])
+        .domain([ext[0], ext[1]])
+
+      this.y[dim] = d3.scaleLinear()
+        .range([this.chart_height, 0])
+        .domain([0, d3.max(this.bins[dim], (d: any[]) => d.length)]);
+
+      // Create drawing area
+      let g = this.chart.append("g")
+        .attr("class", "dimension")
+        .attr("width", this.width)
+        .attr("height", this.chart_height)
+        .attr("transform", "translate(" + this.margin.left + ", " + (this.margin.top + (this.chart_height + this.margin.middle) * margin_iterator) + ")");
+
+        // Set custom tick amount if the values are too small
+        let tick_multiplier = 1;
+
+        if(ext[0] - ext[1] < 0.0001) {
+          tick_multiplier = 0.5;
+        }
+        else if(ext[0] - ext[1] < 0.001) {
+          tick_multiplier = 0.7;
+        }
+        else if(ext[0] - ext[1] < 0.01) {
+          tick_multiplier = 0.8;
+        }
+
+        let ticks = self.x[dim].ticks().length
+
+        g.append("g")
+          .attr("class", "x-axis")
+          .attr("transform", "translate(0," + self.chart_height + ")")
+          .call(d3.axisBottom(self.x[dim]).ticks(Math.ceil(ticks * tick_multiplier)));
+
+        g.append("g")
+          .attr("class", "y-axis")
+          .call(d3.axisLeft(self.y[dim]).ticks(4));
+
+        // Add titles for the axis
+        g.append("text")
+          .style("text-anchor", "middle")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -25)
+          .attr("x", -(this.chart_height)/2)
+          .text(dim);
+
+      // Add and store a brush for each axis.
+      g.append("g")
+        .attr("class", "brush")
+        .each(function(this, d) {
+          d3.select(this).call(d3.brushX()
+            .extent([[-2, -2], [self.width+2, self.chart_height+2]])
+            .on("brush", () => {
+              if (!d3.event.sourceEvent) return; // Only transition after input.
+              let range = d3.event.selection.map(self.x[dim].invert)
+              let d0 = range[1]
+              let d1 = range[0]
+
+              self.getBrushing(dim, d0, d1)
+            })
+            .on("end", () => {
+              if (!d3.event.sourceEvent) return; // Only transition after input.
+              if (!d3.event.selection) {
+                self.removeBrushing(dim)
+                return
+              };
+
+              let range = d3.event.selection.map(self.x[dim].invert)
+              let d0 = range[1]
+              let d1 = range[0]
+              let borders = [d3.min(self.bins[dim], x => x["x0"])]
+              borders.push(...self.bins[dim].map(b => b.x1))
+
+              var closest_low = borders.reduce(function(prev: any, curr: any) {
+                return (Math.abs(curr - d0) < Math.abs(prev - d0) ? curr : prev);
+              });
+
+              var closest_high = borders.reduce(function(prev: any, curr: any) {
+                return (Math.abs(curr - d1) < Math.abs(prev - d1) ? curr : prev);
+              });
+
+              d3.select(this).transition().duration(500).call(d3.event.target.move, [closest_high, closest_low].map(self.x[dim]));
+
+              self.getBrushing(dim, closest_low, closest_high)
+            })
+          );
+        })
+
+      this.charts[dim] = g
+
+      margin_iterator++;
+    });
 
     this.container = new PIXI.Container()
 
@@ -333,20 +445,6 @@ export class parallelBarChartsWebgl {
   updateChart() {
     let self = this;
 
-    // Get current dataset dimensions: Keys of the map
-    if (this.data.length > 0) {
-      this.dimensions = d3.keys(this.data[0]["params"]);
-    }
-
-    this.y_lines.domain(this.dimensions);
-
-    this.chart_height = (this.height - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.middle))/this.dimensions.length;
-
-    if(this.chart_height >= 1.5 * this.margin.middle) {
-      this.margin.middle = Math.floor(this.margin.middle * 1.5)
-      this.chart_height = (this.height - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.middle))/this.dimensions.length;
-    }
-
     this.line_data.length = 0
     this.dimensions.forEach((x, i) => {
       if(i == 0) {
@@ -384,143 +482,66 @@ export class parallelBarChartsWebgl {
         .range([this.chart_height, 0])
         .domain([0, d3.max(this.bins[dim], (d: any[]) => d.length)]);
 
-      // Create drawing area
-      let g = this.chart.append("g")
-        .attr("class", "dimension")
-        .attr("width", this.width)
-        .attr("height", this.chart_height)
-        .attr("transform", "translate(" + this.margin.left + ", " + (this.margin.top + (this.chart_height + this.margin.middle) * margin_iterator) + ")");
+      let g = this.charts[dim];
 
-        // Set custom tick amount if the values are too small
-        let tick_multiplier = 1;
+      // Set custom tick amount if the values are too small
+      let tick_multiplier = 1;
 
-        if(ext[0] - ext[1] < 0.0001) {
-          tick_multiplier = 0.5;
-        }
-        else if(ext[0] - ext[1] < 0.001) {
-          tick_multiplier = 0.7;
-        }
-        else if(ext[0] - ext[1] < 0.01) {
-          tick_multiplier = 0.8;
-        }
+      if(ext[0] - ext[1] < 0.0001) {
+        tick_multiplier = 0.5;
+      }
+      else if(ext[0] - ext[1] < 0.001) {
+        tick_multiplier = 0.7;
+      }
+      else if(ext[0] - ext[1] < 0.01) {
+        tick_multiplier = 0.8;
+      }
 
-        let ticks = self.x[dim].ticks().length
+      let ticks = self.x[dim].ticks().length
 
-        g.append("g")
-          .attr("class", "x-axis")
-          .attr("transform", "translate(0," + self.chart_height + ")")
-          .call(d3.axisBottom(self.x[dim]).ticks(Math.ceil(ticks * tick_multiplier)));
+      g.selectAll(".x-axis")
+        .attr("transform", "translate(0," + self.chart_height + ")")
+        .call(d3.axisBottom(self.x[dim]).ticks(Math.ceil(ticks * tick_multiplier)));
 
-        g.append("g")
-          .attr("class", "y-axis")
-          .call(d3.axisLeft(self.y[dim]).ticks(4));
-
-        // Add titles for the axis
-        g.append("text")
-          .style("text-anchor", "middle")
-          .attr("transform", "rotate(-90)")
-          .attr("y", -25)
-          .attr("x", -(this.chart_height)/2)
-          .text(dim);
+      g.selectAll(".y-axis")
+        .call(d3.axisLeft(self.y[dim]).ticks(4));
 
       let bar_chart = g.selectAll(".bucket")
         .data(this.bins[dim])
 
-      // bar_chart.enter().append("rect")
-      //   .attr("class", "bar-parallel")
-      //   .attr("x", x => this.x[dim](x.x0) + 1)
-      //   .attr("y", y => this.y[dim](y.length))
-      //   .attr("height", (d) => {
-      //     return this.chart_height - this.y[dim](d.length); })
-      //   .attr("width", (d) => {
-      //     return this.x[dim](d.x1) - this.x[dim](d.x0) -1;
-      //   })
-
-      // bar_chart.enter().append("text")
-      //   .attr("class", "bar-text")
-      //   .attr("transform", (d) => {
-      //     // return "translate(" + (this.x[dim](d.x0)) + ", " + (this.chart_height - this.y[dim](d.length)) + ")";
-      //     return "translate(" + (this.x[dim](d.x0)) + ", 0)";
-      //   })
-      //   .attr("x", 1)
-      //   .attr("y", 0)
-      //   .text(x => x.length)
-
+      bar_chart.exit().remove();
       bar_chart.enter()
         .append("g")
         .attr("class", "bucket")
         .attr("transform", (d) => {
-          // return "translate(" + (self.x[dim](d.x0) + 1) + ", " + self.y[dim](d.length) + ")";
           return "translate(" + (self.x[dim](d.x0) + 1) + ", 0)";
         })
+        .merge(bar_chart)
         .each(function(d, i) {
           let new_start_point = 0;
-          d3.select(this).selectAll(".bar-parallel")
-            .data(["n5", "n4", "n3", "n2", "n1", "n0"])
-            .enter()
+          let bar = d3.select(this).selectAll(".bar-parallel")
+            .data(["n5", "n4", "n3", "n2", "n1", "n0"]);
+          bar.exit().remove()
+          bar.enter()
             .append("rect")
             .attr("class", "bar-parallel")
+            .attr("width", function(k) {
+              return self.x[dim](d["x1"]) - self.x[dim](d["x0"]) - 1;
+            })
+            .merge(bar)
             .attr("y", function(k) {
               let position = (self.chart_height - new_start_point) - (self.chart_height - self.y[dim](d[k]["value"]));
               if(d[k] > 0) new_start_point = position;
               return position
             })
-            // .attr("y", y => this.y[dim](y.length))
             .attr("height", function(k) {
               return self.chart_height - self.y[dim](d[k]["value"]); })
-            .attr("width", function(k) {
-              return self.x[dim](d["x1"]) - self.x[dim](d["x0"]) - 1;
-            })
         })
-
-
-      // Add and store a brush for each axis.
-      g.append("g")
-        .attr("class", "brush")
-        .each(function(this, d) {
-          d3.select(this).call(d3.brushX()
-            .extent([[-2, -2], [self.width+2, self.chart_height+2]])
-            .on("brush", () => {
-              if (!d3.event.sourceEvent) return; // Only transition after input.
-              let range = d3.event.selection.map(self.x[dim].invert)
-              let d0 = range[1]
-              let d1 = range[0]
-
-              self.getBrushing(dim, d0, d1)
-            })
-            .on("end", () => {
-              if (!d3.event.sourceEvent) return; // Only transition after input.
-              if (!d3.event.selection) {
-                self.removeBrushing(dim)
-                return
-              };
-
-              let range = d3.event.selection.map(self.x[dim].invert)
-              let d0 = range[1]
-              let d1 = range[0]
-              let borders = [d3.min(self.bins[dim], x => x["x0"])]
-              borders.push(...self.bins[dim].map(b => b.x1))
-
-              var closest_low = borders.reduce(function(prev: any, curr: any) {
-                return (Math.abs(curr - d0) < Math.abs(prev - d0) ? curr : prev);
-              });
-
-              var closest_high = borders.reduce(function(prev: any, curr: any) {
-                return (Math.abs(curr - d1) < Math.abs(prev - d1) ? curr : prev);
-              });
-
-              d3.select(this).transition().duration(500).call(d3.event.target.move, [closest_high, closest_low].map(self.x[dim]));
-
-              self.getBrushing(dim, closest_low, closest_high)
-            })
-          );
-        })
-
-      this.charts[dim] = g
 
       margin_iterator++;
     });
 
+    this.container.removeChildren();
     this.data.forEach(d => {
       let line_data = this.line_data.map((row) => {
         return [this.x[row.dim](d["params"][row.dim]), row.y];
@@ -545,26 +566,5 @@ export class parallelBarChartsWebgl {
       this.container.addChild(line);
       this.line_id.set(line, d["id"])
     })
-    //
-    // // Draw lines
-    // this.parcoords
-    //   .attr("transform", "translate(" + this.margin.left + ", " + this.margin.top + ")")
-    //   .selectAll("path")
-    //   .data(this.data)
-    //   .enter().append("path")
-    //   .attr("class", "line_parallel")
-    //   .attr("d", (d) => {
-    //     return this.path(d["params"])
-    //   })
-    //   .on("click", function(d) {
-    //     d3.event.stopPropagation();
-    //     d3.selectAll(".line_parallel").classed("background", true);
-    //
-    //     let clicked = d3.select(this);
-    //     clicked.classed("background", false);
-    //     clicked.classed("selected", true);
-    //
-    //   })
-    //   .moveToBack()
   }
 }

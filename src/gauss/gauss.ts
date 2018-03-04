@@ -137,55 +137,7 @@ export class Gauss {
       })
     }
 
-    this.params.map((dim) => {
-      let ext = <any>d3.extent(this.data, (data) => {
-        return data["params"][dim];
-      })
-
-      let focus_data = this.data_charts.map(a => {
-        return {
-          value: a["params"][dim],
-          highlight: a["highlight"],
-          color: a["color"]
-        }
-
-      })
-
-      let bin_count = 20;
-      let borders = d3.range(ext[0], ext[1], (ext[1] - ext[0]) / bin_count)
-      borders.push(ext[1])
-
-      let bins = []
-      borders.forEach((x, i) => {
-        if(i <= bin_count - 1) {
-          let bucket = []
-          bucket["x0"] = borders[i]
-          bucket["x1"] = borders[i+1]
-          bucket["n0"] = { value: 0, color: "#d3d3d3"}
-          bucket["n1"] = { value: 0, color: this.color_viridis(0.2)}
-          bucket["n2"] = { value: 0, color: this.color_viridis(0.4)}
-          bucket["n3"] = { value: 0, color: this.color_viridis(0.6)}
-          bucket["n4"] = { value: 0, color: this.color_viridis(0.8)}
-          bucket["n5"] = { value: 0, color: this.color_viridis(1)}
-
-          bins.push(bucket)
-        }
-      })
-
-      focus_data.forEach(x => {
-        for(let i = 1; i < borders.length; i++) {
-          if(borders[i] >= x.value) {
-            bins[i - 1].push(x)
-            if(x.highlight == 0) {
-              bins[i - 1][this.keys.get("none")]["value"] += 1;
-            }
-            break;
-          }
-        }
-      })
-
-      this.bins[dim] = bins
-    })
+    this.updateBins();
 
     this.data_length = this.data_lines_original.length;
     this.filterOutData([])
@@ -203,10 +155,15 @@ export class Gauss {
 
   private removeSelection() {
     this.data_charts.forEach(x => {
-      if(x["highlight"] > 0) this.filter.add(x["id"])
+      if(x["highlight"] > 0) {
+        x["highlight"] = 0;
+        this.filter.add(x["id"])
+      }
     })
 
     this.filterData();
+
+    this.updateBins();
     this.no_filter = false;
   }
 
@@ -215,6 +172,7 @@ export class Gauss {
     this.data_charts.length = 0
 
     this.data_charts.push(...this.data_lines_original)
+    this.updateBins();
 
     this.no_filter = true;
   }
@@ -265,108 +223,66 @@ export class Gauss {
         }
       })
 
-      // Update bins
-      this.params.map((dim) => {
-        let ext = <any>d3.extent(this.data, (data) => {
-          return data["params"][dim];
-        })
-
-        let focus_data = this.data_charts.map(a => {
-          return {
-            value: a["params"][dim],
-            highlight: a["highlight"],
-            color: a["color"]
-          }
-
-        })
-
-        let bin_count = 20;
-        let borders = d3.range(ext[0], ext[1], (ext[1] - ext[0]) / bin_count)
-        borders.push(ext[1])
-
-        let bins = []
-        borders.forEach((x, i) => {
-          if(i <= bin_count - 1) {
-            let bucket = []
-            bucket["x0"] = borders[i]
-            bucket["x1"] = borders[i+1]
-            bucket["n0"] = { value: 0, color: "#d3d3d3"}
-            bucket["n1"] = { value: 0, color: this.color_viridis(0.2)}
-            bucket["n2"] = { value: 0, color: this.color_viridis(0.4)}
-            bucket["n3"] = { value: 0, color: this.color_viridis(0.6)}
-            bucket["n4"] = { value: 0, color: this.color_viridis(0.8)}
-            bucket["n5"] = { value: 0, color: this.color_viridis(1)}
-
-            bins.push(bucket)
-          }
-        })
-
-        focus_data.forEach(x => {
-          for(let i = 1; i < borders.length; i++) {
-            if(borders[i] >= x.value) {
-              bins[i - 1].push(x)
-              if(x.highlight == 0) {
-                bins[i - 1][this.keys.get("none")]["value"] += 1;
-              }
-              else {
-                bins[i - 1][this.keys.get(x.color)]["value"] += 1;
-              }
-              break;
-            }
-          }
-        })
-
-        this.bins[dim] = bins
-      })
-
-
-
-      // this.data_charts.sort(function(x, y){
-      //    return d3.ascending(x.highlight, y.highlight);
-      // })
+    this.updateBins();
 
     this.redraw_lines = this.redraw_lines == 0 ? 1 : 0;
     this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
   }
 
-  private updateInData(mapping) {
-    if (this.inFilter.length > 0) {
-      this.data_charts
-        .filter(x => this.inFilter.includes(x["id"]))
-        .forEach(x => {
-          x["highlight"] = mapping.get(x["id"])
-        })
-    }
-    else {
-      // this.data_parallel
-      //   .forEach(x => {
-      //     x["highlight"] = mapping.get(x["id"])
-      //   })
-    }
+  private updateBins() {
+    // Update bins
+    this.params.map((dim) => {
+      let ext = <any>d3.extent(this.data, (data) => {
+        return data["params"][dim];
+      })
 
-    this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
-  }
+      let focus_data = this.data_charts.map(a => {
+        return {
+          value: a["params"][dim],
+          highlight: a["highlight"],
+          color: a["color"]
+        }
 
-  private updateParallelData(ids) {
-    this.inFilter = ids;
+      })
 
-    if (ids.length > 0) {
-      // this.data_parallel.forEach(x => {
-      //   if (ids.includes(x["id"])) {
-      //     x["highlight"] = 1;
-      //   }
-      //   else {
-      //     x["highlight"] = 0;
-      //   }
-      // })
-    }
-    else {
-      // this.data_parallel.forEach(x => {
-      //   x["highlight"] = 0;
-      // })
-    }
+      let bin_count = 20;
+      let borders = d3.range(ext[0], ext[1], (ext[1] - ext[0]) / bin_count)
+      borders.push(ext[1])
 
-    this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
+      let bins = []
+      borders.forEach((x, i) => {
+        if(i <= bin_count - 1) {
+          let bucket = []
+          bucket["x0"] = borders[i]
+          bucket["x1"] = borders[i+1]
+          bucket["n0"] = { value: 0, color: "#d3d3d3"}
+          bucket["n1"] = { value: 0, color: this.color_viridis(0.2)}
+          bucket["n2"] = { value: 0, color: this.color_viridis(0.4)}
+          bucket["n3"] = { value: 0, color: this.color_viridis(0.6)}
+          bucket["n4"] = { value: 0, color: this.color_viridis(0.8)}
+          bucket["n5"] = { value: 0, color: this.color_viridis(1)}
+
+          bins.push(bucket)
+        }
+      })
+
+      focus_data.forEach(x => {
+        for(let i = 1; i < borders.length; i++) {
+          if(borders[i] >= x.value) {
+            bins[i - 1].push(x)
+            if(x.highlight == 0) {
+              bins[i - 1][this.keys.get("none")]["value"] += 1;
+            }
+            else {
+              bins[i - 1][this.keys.get(x.color)]["value"] += 1;
+            }
+            break;
+          }
+        }
+      })
+
+      this.bins[dim] = bins
+    })
   }
 
   private filterOutData(ids) {
