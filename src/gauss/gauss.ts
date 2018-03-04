@@ -250,7 +250,7 @@ export class Gauss {
   private updateBins() {
     // Update bins
     this.params.map((dim) => {
-      let ext = <any>d3.extent(this.data, (data) => {
+      let ext = <any>d3.extent(this.data_charts, (data) => {
         return data["params"][dim];
       })
 
