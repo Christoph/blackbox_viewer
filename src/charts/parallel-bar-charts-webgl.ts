@@ -419,6 +419,7 @@ export class parallelBarChartsWebgl {
                   return position
                 })
                 .attr("height", function(k: any) {
+                  // TODO: Strange errors when loading example dataset after normal dataset
                   return self.chart_height - self.y[dim](d[k]["value"])
                 })
                 .style("fill", function(k: any) {
