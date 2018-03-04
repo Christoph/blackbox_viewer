@@ -14,7 +14,7 @@ export class Gauss {
   data_not_loaded = true;
   modes = ["Opacity + Viridis", "Opacity", "Color-Plasma", "Color-Viridis"];
   input_modes = ["Parallel-Charts", "SPLOM"]
-  selected_input_mode = "SPLOM";
+  selected_input_mode = "Parallel-Charts";
   splom_selected = true;
   selected_mode = "Opacity + Viridis";
 
