@@ -17,6 +17,9 @@ export class Gauss {
   selected_input_mode = "Parallel-Charts";
   splom_selected = false;
   selected_mode = "Opacity + Viridis";
+  no_filter = true;
+  no_selection = true;
+  filter = new Set();
 
   @observable brushing_parallel;
   redraw_parallel;
@@ -192,9 +195,28 @@ export class Gauss {
     this.updateData();
   }
 
-  brushing_parallelChanged() {
-    // this.updateData();
-    // this.filterOutData(this.brushing_parallel);
+  private filterData() {
+    this.data_charts.length = 0
+
+    this.data_charts.push(...this.data_lines_original.filter(x => !this.filter.has(x["id"])))
+  }
+
+  private removeSelection() {
+    this.data_charts.forEach(x => {
+      if(x["highlight"] > 0) this.filter.add(x["id"])
+    })
+
+    this.filterData();
+    this.no_filter = false;
+  }
+
+  private resetSelection() {
+    this.filter.clear()
+    this.data_charts.length = 0
+
+    this.data_charts.push(...this.data_lines_original)
+
+    this.no_filter = true;
   }
 
   private updateData() {
@@ -205,9 +227,13 @@ export class Gauss {
           .domain([this.brushing_lines.center - this.brushing_lines.radius, this.brushing_lines.center, this.brushing_lines.center + this.brushing_lines.radius])
           .range([0.1, 1.1, 0.1])
       })
+
+      this.no_selection = false;
     }
     else {
       this.outFilter.delete(this.brushing_lines.dim)
+
+      this.no_selection = true;
     }
 
     // Set highlight and colors

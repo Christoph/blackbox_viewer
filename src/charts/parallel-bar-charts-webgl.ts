@@ -76,14 +76,15 @@ export class parallelBarChartsWebgl {
     this.width = this.x_size - this.margin.left - this.margin.right;
     this.height = this.y_size - this.margin.top - this.margin.bottom;
 
-    if(!this.initialized) this.initChart()
-    if (this.data.length > 1) {
-      this.updateChart();
-    }
+    // if(!this.initialized) this.initChart()
+    // if (this.data.length > 1) {
+    //   this.updateChart();
+    // }
   }
 
   // Update the chart if the data changes
   dataMutated(splices) {
+    if(!this.initialized) this.initChart()
     this.updateChart();
   }
 
@@ -301,29 +302,6 @@ export class parallelBarChartsWebgl {
         else if(this.mode = "Opacity + Viridis") {
           let opacity = 0;
           let counter = 0;
-
-          // this.charts[dim].selectAll(".bar-parallel")
-          //   .style("fill", function(bar) {
-          //     let opacity = 0;
-          //     let counter = 0;
-          //
-          //     self.data.forEach((d: any[]) => {
-          //       let value = d["params"][dim];
-          //
-          //       if(value >= bar.x0 && value <= bar.x1) {
-          //         counter++;
-          //         opacity += d["highlight"]
-          //       }
-          //     })
-          //
-          //     if(opacity <= 0) {
-          //       return "#d3d3d3"
-          //     }
-          //     else {
-          //       return self.quantize(opacity / counter)
-          //     }
-          //
-          //   })
 
           this.charts[dim].selectAll(".bucket")
             .data(this.bins[dim])
