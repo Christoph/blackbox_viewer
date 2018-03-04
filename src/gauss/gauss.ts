@@ -30,9 +30,7 @@ export class Gauss {
   resetChart;
   resetInputChart;
 
-  inFilter = []
   outFilter = new Map()
-
 
   color_viridis = d3.scaleSequential(d3.interpolateViridis)
     .domain([0, 1])
@@ -79,10 +77,21 @@ export class Gauss {
     reader.readAsText(file);
   }
 
-  loadExample() {
+  loadExample = () => {
     this.data = exampleData.getExampleData()
     this.load()
     this.visualize()
+  }
+
+  restart = () => {
+    this.outFilter.clear();
+    this.filter.clear();
+
+    this.data_charts.length = 0
+    this.data_lines_original.length = 0
+
+    this.resetInputChart = this.resetInputChart == 0 ? 1 : 0;
+    this.resetChart = this.resetChart == 0 ? 1 : 0;
   }
 
   selectDim(dim) {
@@ -111,11 +120,7 @@ export class Gauss {
   }
 
   visualize() {
-    this.resetChart = this.resetChart == 0 ? 1 : 0;
-    this.resetInputChart = this.resetInputChart == 0 ? 1 : 0;
-
-    this.data_charts.length = 0
-    this.data_lines_original.length = 0
+    this.restart();
 
     for (let i = 0; i < this.data.length; i++) {
       let d = this.data[i]

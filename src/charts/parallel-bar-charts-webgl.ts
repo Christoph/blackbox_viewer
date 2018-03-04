@@ -94,14 +94,12 @@ export class parallelBarChartsWebgl {
   }
 
   resetChanged() {
-    // if(this.initialized) {
-    //   this.svg.remove()
-    //   this.dataMutated("")
-    //   this.initialized = false;
-    // }
-    //
-    // this.initChart()
-    // this.updateChart();
+    if(this.initialized) {
+      this.svg.remove();
+      this.container.removeChildren();
+
+      this.initialized = false;
+    }
   }
 
   // Remove the watcher after disposing the class
@@ -259,12 +257,8 @@ export class parallelBarChartsWebgl {
 
     this.y_lines.domain(this.dimensions);
 
-    this.chart_height = (this.height - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.middle))/this.dimensions.length;
-
-    if(this.chart_height >= 1.5 * this.margin.middle) {
-      this.margin.middle = Math.floor(this.margin.middle * 1.5)
-      this.chart_height = (this.height - this.margin.top - this.margin.bottom - ((this.dimensions.length-1) * this.margin.middle))/this.dimensions.length;
-    }
+    this.chart_height = Math.floor((this.height - this.margin.top - this.margin.bottom) / ((this.dimensions.length-1) + this.dimensions.length))
+    this.margin.middle = this.chart_height;
 
     let margin_iterator = 0;
 
@@ -414,27 +408,20 @@ export class parallelBarChartsWebgl {
         else if(this.mode = "Opacity + Viridis") {
           let opacity = 0;
           let counter = 0;
-
           this.charts[dim].selectAll(".bucket")
             .data(this.bins[dim])
-            // .attr("transform", (d) => {
-            //   return "translate(" + (self.x[dim](d.x0) + 1) + ", 0)";
-            // })
             .each(function(d, i) {
               let new_start_point = 0;
               d3.select(this).selectAll(".bar-parallel")
-                .data(["n5", "n4", "n3", "n2", "n1", "n0"])
-                .transition()
-                .duration(200)
-                .attr("y", function(k) {
+                .attr("y", function(k: any) {
                   let position = (self.chart_height - new_start_point) - (self.chart_height - self.y[dim](d[k]["value"]));
                   if(d[k]["value"] > 0) new_start_point += (self.chart_height - self.y[dim](d[k]["value"]));
                   return position
                 })
-                .attr("height", function(k) {
+                .attr("height", function(k: any) {
                   return self.chart_height - self.y[dim](d[k]["value"])
                 })
-                .style("fill", function(k) {
+                .style("fill", function(k: any) {
                   return d[k]["color"]
                 })
             })

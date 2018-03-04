@@ -106,7 +106,7 @@ export class LineCharts {
   }
 
   redrawChanged() {
-    if (this.data.length > 1) {
+    if (this.data.length > 1 && this.initialized) {
       this.data.forEach(d => {
         this.id_color.set(d["id"], d["color"])
       })
@@ -118,8 +118,13 @@ export class LineCharts {
   }
 
   resetChanged() {
+      console.log("reset")
     if(this.initialized) {
       this.svg.remove()
+      this.dimensions.forEach(dim => {
+        this.charts.get(dim).container.removeChildren();
+      })
+
       this.initialized = false;
     }
   }
