@@ -95,7 +95,6 @@ export class LineCharts {
   dataMutated(splices) {
     if (this.data.length > 1) {
       if(!this.initialized) this.initChart()
-
       this.updateChart();
       this.svg.selectAll("path.focusline").remove()
     }
@@ -688,6 +687,7 @@ export class LineCharts {
       // Barchart
       // Remove bars
       focus_chart.exit().remove();
+      this.charts.get(dim).focus.selectAll("text.text").remove();
 
       // Add bars
       focus_chart.enter().append("rect")
@@ -714,9 +714,11 @@ export class LineCharts {
         .moveToBack();
     })
 
+    this.dimensions.forEach(dim => {
+      this.charts.get(dim).container.removeChildren();
+    })
 
-    this.data
-    .forEach(d => {
+    this.data.forEach(d => {
       this.dimensions.forEach(dim => {
         let line = new PIXI.Graphics();
         line.lineStyle(1, 0xffffff, 1);
