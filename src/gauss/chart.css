@@ -1,3 +1,11 @@
+.foreground {
+  opacity: 1;
+}
+
+.background {
+  opacity: 0.1;
+}
+
 .reset:hover {
   cursor: pointer;
   text-decoration: underline;

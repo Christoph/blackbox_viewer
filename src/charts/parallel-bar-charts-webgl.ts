@@ -79,7 +79,14 @@ export class parallelBarChartsWebgl {
 
   // Update the chart if the data changes
   dataMutated(splices) {
-    if(!this.initialized) this.initChart()
+    if(!this.initialized) {
+      this.initChart()
+
+      this.data.forEach(d => {
+        this.id_color.set(d["id"], d["color"])
+      })
+    }
+
     this.updateChart();
   }
 
@@ -116,6 +123,23 @@ export class parallelBarChartsWebgl {
 
   private resolve_brushing = () => {
     let brushed = _.intersection(...Array.from(this.brushes.values()));
+
+    this.dimensions.forEach(dim => {
+      this.charts[dim].selectAll(".bucket").style("opacity", function(d, i) {
+        if(brushed.length < 1) {
+          return "1"
+        }
+        else {
+          let op = ".3"
+          d.forEach(x => {
+            if(brushed.includes(x.id)) {
+              op = "1";
+            }
+          })
+          return op;
+        }
+      });
+    })
 
     if(this.brushes.size == 0) {
       this.reset_brush_webgl();
@@ -322,6 +346,7 @@ export class parallelBarChartsWebgl {
             .extent([[-2, -2], [self.width+2, self.chart_height+2]])
             .on("brush", () => {
               if (!d3.event.sourceEvent) return; // Only transition after input.
+
               let range = d3.event.selection.map(self.x[dim].invert)
               let d0 = range[1]
               let d1 = range[0]
@@ -332,6 +357,9 @@ export class parallelBarChartsWebgl {
               if (!d3.event.sourceEvent) return; // Only transition after input.
               if (!d3.event.selection) {
                 self.removeBrushing(dim)
+                // d3.selectAll(".bar-parallel").style("opacity", function(d, i) {
+                //   return d["x"] >= closest_low && d["x"] < closest_high || !d3.event.selection ? "1" : ".2";
+                // });
                 return
               };
 
@@ -340,12 +368,6 @@ export class parallelBarChartsWebgl {
               let d1 = range[0]
               let borders = [d3.min(self.bins[dim], x => x["x0"])]
               borders.push(...self.bins[dim].map(b => b.x1))
-              // console.log(d3.max(self.bins[dim], b => b["x1"]))
-
-              // if(borders.length < 2) {
-              //   console.log(borders)
-              //   borders = [ext[1] - 1 , ext[1], ext[1] + 1]
-              // }
 
               var closest_low = borders.reduce(function(prev: any, curr: any) {
                 return (Math.abs(curr - d0) < Math.abs(prev - d0) ? curr : prev);
@@ -356,6 +378,10 @@ export class parallelBarChartsWebgl {
               });
 
               d3.select(this).transition().duration(500).call(d3.event.target.move, [closest_high, closest_low].map(self.x[dim]));
+
+              // d3.selectAll(".bar-parallel").style("opacity", function(d, i) {
+              //   return d["x"] >= closest_low && d["x"] < closest_high || !d3.event.selection ? "1" : ".2";
+              // });
 
               self.getBrushing(dim, closest_low, closest_high)
             })

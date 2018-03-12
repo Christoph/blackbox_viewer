@@ -264,6 +264,7 @@ export class Gauss {
 
       let focus_data = this.data_charts.map(a => {
         return {
+          id: a["id"],
           value: a["params"][dim],
           highlight: a["highlight"],
           color: a["color"]
