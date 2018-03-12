@@ -601,7 +601,7 @@ export class LineCharts {
           let counter = 0;
 
           self.data.forEach((d: any[]) => {
-            let value = d["data"][this.time_scale(self.selected_time)][dim];
+            let value = d["data"][self.time_scale(self.selected_time)][dim];
 
             if(value >= b.x0 && value <= b.x1) {
               counter++;
@@ -664,7 +664,6 @@ export class LineCharts {
       this.selected_time = x_max;
 
       let focus_data = <any>[];
-      console.log(this.data, this.selected_time)
       this.data.forEach((d: any[]) => {
         focus_data.push(d["data"][this.time_scale(this.selected_time)][dim])
       })

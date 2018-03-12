@@ -52,6 +52,8 @@ export class Gauss {
       .domain([0.1, 1.1])
       .range([0.2, 0.4, 0.6, 0.8, 1])
 
+  time_scale = d3.scaleLinear()
+
   data_charts = <any[]>[]
   data_lines_original = <any[]>[]
   data_length = 0;
@@ -100,6 +102,12 @@ export class Gauss {
 
   selectDim(dim) {
     this.selected_dim = dim;
+
+    let x_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[this.selected_dim]))
+    let x_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[this.selected_dim]))
+
+    this.time_scale
+      .domain([+x_min, +x_max])
     this.dim_not_selected = false;
   }
 
@@ -216,8 +224,8 @@ export class Gauss {
 
         if(this.outFilter.size > 0) {
           this.outFilter.forEach((data, dim) => {
-            if(x.data[data.timestep][dim] >= data.scale.domain()[0] && x.data[data.timestep][dim] <= data.scale.domain()[2]) {
-              highlight += data.scale(x.data[data.timestep][dim]);
+            if(x.data[this.time_scale(data.timestep)][dim] >= data.scale.domain()[0] && x.data[this.time_scale(data.timestep)][dim] <= data.scale.domain()[2]) {
+              highlight += data.scale(x.data[this.time_scale(data.timestep)][dim]);
               counter++;
             }
           })
@@ -331,6 +339,13 @@ export class Gauss {
         this.params = d3.keys(this.data[0]["params"]).filter((d) => {
           return d
         });
+
+        let x_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[this.selected_dim]))
+        let x_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[this.selected_dim]))
+
+        this.time_scale
+          .domain([+x_min, +x_max])
+          .range(d3.range(0, this.data[0]["data"].length))
 
         this.selected_dim = this.dimensions[0];
         this.dim_not_selected = false;
