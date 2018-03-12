@@ -275,6 +275,12 @@ export class Gauss {
       let borders = d3.range(ext[0], ext[1], (ext[1] - ext[0]) / bin_count)
       borders.push(ext[1])
 
+      // Add values around single value input space
+      if(borders.length < 2) {
+        borders = d3.range(ext[0]*0.9, ext[1]*1.1, (ext[1]*1.1 - ext[0]*0.9) / bin_count)
+        borders.push(ext[1]*1.1)
+      }
+
       let bins = []
       borders.forEach((x, i) => {
         if(i <= bin_count - 1) {

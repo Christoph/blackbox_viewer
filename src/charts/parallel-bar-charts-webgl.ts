@@ -340,6 +340,12 @@ export class parallelBarChartsWebgl {
               let d1 = range[0]
               let borders = [d3.min(self.bins[dim], x => x["x0"])]
               borders.push(...self.bins[dim].map(b => b.x1))
+              // console.log(d3.max(self.bins[dim], b => b["x1"]))
+
+              // if(borders.length < 2) {
+              //   console.log(borders)
+              //   borders = [ext[1] - 1 , ext[1], ext[1] + 1]
+              // }
 
               var closest_low = borders.reduce(function(prev: any, curr: any) {
                 return (Math.abs(curr - d0) < Math.abs(prev - d0) ? curr : prev);
@@ -462,10 +468,19 @@ export class parallelBarChartsWebgl {
         return data["params"][dim];
       })
 
+      let extent = [];
+      if(ext[0] == ext[1]) {
+        extent = [ext[0]*0.9, ext[0]*1.1]
+      }
+      else {
+        extent = [ext[0], ext[1]]
+      }
+
       this.x[dim] = d3.scaleLinear()
         .range([0, this.width])
-        .domain([ext[0], ext[1]])
+        .domain(extent)
 
+      console.log(dim, this.bins[dim])
       this.y[dim] = d3.scaleLinear()
         .range([this.chart_height, 0])
         .domain([0, d3.max(this.bins[dim], (d: any[]) => d.length)]);
