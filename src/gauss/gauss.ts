@@ -105,10 +105,10 @@ export class Gauss {
 
     let x_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[this.selected_dim]))
     let x_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[this.selected_dim]))
-    console.log(x_min, x_max)
+
     this.time_scale
       .domain([+x_min, +x_max])
-      .range(d3.range(0, this.data[0]["data"].length))
+      .range([0, this.data[0]["data"].length - 1])
 
     this.dim_not_selected = false;
   }
@@ -356,7 +356,7 @@ export class Gauss {
 
         this.time_scale
           .domain([+x_min, +x_max])
-          .range(d3.range(0, this.data[0]["data"].length))
+          .range([0, this.data[0]["data"].length - 1])
 
         this.dim_not_selected = false;
         this.data_not_loaded = false;

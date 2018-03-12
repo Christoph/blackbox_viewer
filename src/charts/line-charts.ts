@@ -654,7 +654,7 @@ export class LineCharts {
 
     this.time_scale
       .domain([x_min, x_max])
-      .range(d3.range(0, this.data[0]["data"].length))
+      .range([0, this.data[0]["data"].length - 1])
 
     // Per dimension calls
     this.dimensions.map((dim) => {
