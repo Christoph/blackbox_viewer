@@ -103,7 +103,9 @@ export class parallelBarChartsWebgl {
   resetChanged() {
     if(this.initialized) {
       this.svg.remove();
-      this.container.removeChildren();
+      
+      let children = this.container.removeChildren();
+      children.forEach(x => x.destroy())
 
       this.initialized = false;
     }
@@ -574,7 +576,9 @@ export class parallelBarChartsWebgl {
       margin_iterator++;
     });
 
-    this.container.removeChildren();
+    let children = this.container.removeChildren();
+    children.forEach(x => x.destroy())
+
     this.data.forEach(d => {
       let line_data = this.line_data.map((row) => {
         return [this.x[row.dim](d["params"][row.dim]), row.y];
