@@ -480,7 +480,6 @@ export class parallelBarChartsWebgl {
         .range([0, this.width])
         .domain(extent)
 
-      console.log(dim, this.bins[dim])
       this.y[dim] = d3.scaleLinear()
         .range([this.chart_height, 0])
         .domain([0, d3.max(this.bins[dim], (d: any[]) => d.length)]);
