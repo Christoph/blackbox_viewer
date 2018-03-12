@@ -122,9 +122,7 @@ export class LineCharts {
     if(this.initialized) {
       this.svg.remove()
       this.dimensions.forEach(dim => {
-        let children = this.charts.get(dim).container.removeChildren();
-
-        children.forEach(x => x.destroy())
+        this.charts.get(dim).container.destroy();
       })
 
       this.initialized = false;

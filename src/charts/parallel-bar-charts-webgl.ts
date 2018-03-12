@@ -103,9 +103,8 @@ export class parallelBarChartsWebgl {
   resetChanged() {
     if(this.initialized) {
       this.svg.remove();
-      
-      let children = this.container.removeChildren();
-      children.forEach(x => x.destroy())
+
+      this.container.destroy();
 
       this.initialized = false;
     }
