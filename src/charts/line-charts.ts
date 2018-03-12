@@ -45,6 +45,7 @@ export class LineCharts {
   private center = 1.0;
   private weight = 1.0;
   private selected_time;
+  private time_scale;
   private bins;
   private x_values;
   private color_viridis;
@@ -227,6 +228,8 @@ export class LineCharts {
     this.x = d3.scaleLinear()
       .range([0, this.lc_width]);
 
+    this.time_scale = d3.scaleLinear()
+
     this.lineGenerator = d3.line();
 
     this.weight_to_highlight = d3.scaleLinear()
@@ -272,7 +275,6 @@ export class LineCharts {
 
           self.weight_to_highlight.domain([0, self.weight])
 
-          console.time("mouse down")
           self.createBrush(dim);
           self.updateBrush(dim);
           self.resolve_brushing(dim, true);
@@ -466,7 +468,7 @@ export class LineCharts {
 
     let focus_data = <any>[];
     this.data.forEach((d: any[]) => {
-      focus_data.push(d["data"][this.selected_time][dim])
+      focus_data.push(d["data"][this.time_scale(this.selected_time)][dim])
     })
 
     this.bins = d3.histogram()
@@ -599,7 +601,7 @@ export class LineCharts {
           let counter = 0;
 
           self.data.forEach((d: any[]) => {
-            let value = d["data"][self.selected_time][dim];
+            let value = d["data"][this.time_scale(self.selected_time)][dim];
 
             if(value >= b.x0 && value <= b.x1) {
               counter++;
@@ -650,6 +652,10 @@ export class LineCharts {
       return d[this.x_attribute]
     })
 
+    this.time_scale
+      .domain([x_min, x_max])
+      .range(d3.range(0, this.data[0]["data"].length))
+
     // Per dimension calls
     this.dimensions.map((dim) => {
       let y_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[dim]))
@@ -658,8 +664,9 @@ export class LineCharts {
       this.selected_time = x_max;
 
       let focus_data = <any>[];
+      console.log(this.data, this.selected_time)
       this.data.forEach((d: any[]) => {
-        focus_data.push(d["data"][this.selected_time][dim])
+        focus_data.push(d["data"][this.time_scale(this.selected_time)][dim])
       })
 
       this.y.get(dim).domain([y_min, y_max]);
