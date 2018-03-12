@@ -496,7 +496,12 @@ export class parallelBarChartsWebgl {
 
       let extent = [];
       if(ext[0] == ext[1]) {
-        extent = [ext[0]*0.9, ext[0]*1.1]
+        if(ext[0] == 0) {
+          extent = [0, 1]
+        }
+        else {
+          extent = [ext[0]*0.9, ext[0]*1.1]
+        }
       }
       else {
         extent = [ext[0], ext[1]]

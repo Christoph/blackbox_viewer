@@ -280,8 +280,14 @@ export class Gauss {
 
       // Add values around single value input space
       if(borders.length < 2) {
-        borders = d3.range(ext[0]*0.9, ext[1]*1.1, (ext[1]*1.1 - ext[0]*0.9) / bin_count)
-        borders.push(ext[1]*1.1)
+        if(ext[0] == 0) {
+          borders = d3.range(ext[0], ext[1]+1, (ext[1]+1 - ext[0]) / bin_count)
+          borders.push(ext[1]+1)
+        }
+        else {
+          borders = d3.range(ext[0]*0.9, ext[1]*1.1, (ext[1]*1.1 - ext[0]*0.9) / bin_count)
+          borders.push(ext[1]*1.1)
+        }
       }
 
       let bins = []
