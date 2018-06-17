@@ -201,21 +201,23 @@ export class Gauss {
   }
 
   private updateData() {
-    if(this.brushing_lines.active) {
-      this.outFilter.set(this.brushing_lines.dim, {
-        timestep: this.brushing_lines.timestep,
-        scale: d3.scaleLinear()
-          .domain([this.brushing_lines.extent[0], this.brushing_lines.extent[1]+((this.brushing_lines.extent[0]-this.brushing_lines.extent[1])/2), this.brushing_lines.extent[1]])
-          .range([0.1, 1.1, 0.1])
-      })
+    this.no_selection = true;
 
-      this.no_selection = false;
-    }
-    else {
-      this.outFilter.delete(this.brushing_lines.dim)
+    this.brushing_lines.forEach((d, dim) => {
+      if(d.active) {
+        this.outFilter.set(dim, {
+          timestep: d.timestep,
+          scale: d3.scaleLinear()
+            .domain([d.extent[0], d.extent[1]+((d.extent[0]-d.extent[1])/2), d.extent[1]])
+            .range([0.1, 1.1, 0.1])
+        })
 
-      this.no_selection = true;
-    }
+        this.no_selection = false;
+      }
+      else {
+        this.outFilter.delete(dim)
+      }
+    })
 
     // Set highlight and colors
     let selected_lines = 0;
@@ -226,8 +228,9 @@ export class Gauss {
 
         if(this.outFilter.size > 0) {
           this.outFilter.forEach((data, dim) => {
-            if(x.data[this.time_scale(data.timestep)][dim] >= data.scale.domain()[2] && x.data[this.time_scale(data.timestep)][dim] <= data.scale.domain()[0]) {
-              highlight += data.scale(x.data[this.time_scale(data.timestep)][dim]);
+            let t = Math.round(this.time_scale(data.timestep))
+            if(x.data[t][dim] >= data.scale.domain()[2] && x.data[t][dim] <= data.scale.domain()[0]) {
+              highlight += data.scale(x.data[t][dim]);
               counter++;
             }
           })

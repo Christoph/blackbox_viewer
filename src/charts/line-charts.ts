@@ -15,7 +15,7 @@ export class LineCharts {
   @bindable mode = "Opacity";
 
   // Two-Way
-  @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
+  @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing = new Map();
 
   // Observed Variables
   @bindable data = [];
@@ -44,7 +44,6 @@ export class LineCharts {
   private brush;
   private center = 1.0;
   private weight = 1.0;
-  private selected_time;
   private time_scale;
   private bins;
   private x_values;
@@ -56,6 +55,7 @@ export class LineCharts {
   private weight_to_highlight;
   private lineGenerator;
   private brush_active = new Map();
+  private selected_time = new Map();
 
   // set the dimensions and margins of the graph
   private width;
@@ -133,13 +133,26 @@ export class LineCharts {
     this.subscription.dispose();
   }
 
-  resolve_brushing(dim, active, extent=[0, 0]) {
-    this.brushing = {
-      active: active,
-      extent: extent,
-      dim: dim,
-      timestep: this.selected_time
-    }
+  resolve_brushing() {
+    this.brushing = new Map();
+
+    this.dimensions.forEach(dim => {
+      if(this.brush_active.has(dim)) {
+        this.brushing.set(dim, {
+          active: true,
+          extent: this.brush_active.get(dim),
+          timestep: this.selected_time.get(dim)
+        })
+      }
+      else {
+        this.brushing.set(dim, {
+          active: false,
+          extent: [],
+          timestep: this.selected_time.get(dim)
+        })
+      }
+
+    })
   }
 
   initChart() {
@@ -176,7 +189,7 @@ export class LineCharts {
     // Initialize id color Map and active brushes
     this.dimensions.forEach(dim => {
       this.line_id.set(dim, new Map())
-      this.brush_active.set(dim, false)
+      // this.brush_active.set(dim, [])
     })
 
     // Set height value
@@ -215,7 +228,6 @@ export class LineCharts {
     // Create initial chart areas
     let margin_iterator = 0;
     this.dimensions.map((dim) => {
-      let brushing = false;
 
       // Linechart area
       let linechart = this.svg
@@ -264,10 +276,10 @@ export class LineCharts {
               return (Math.abs(curr - self.x.invert(d3.event.x)) < Math.abs(prev - self.x.invert(d3.event.x)) ? curr : prev);
             });
 
-            self.selected_time = closest
+            self.selected_time.set(dim, closest)
 
             d3.select(this).select("text")
-              .text(self.selected_time)
+              .text(self.selected_time.get(dim))
 
             self.updateBars(dim);
           })
@@ -276,10 +288,10 @@ export class LineCharts {
               return (Math.abs(curr - self.x.invert(d3.event.x)) < Math.abs(prev - self.x.invert(d3.event.x)) ? curr : prev);
             });
 
-            self.selected_time = closest
+            self.selected_time.set(dim, closest)
 
             d3.select(this).select("text")
-              .text(self.selected_time)
+              .text(self.selected_time.get(dim))
 
             self.updateBars(dim);
 
@@ -291,12 +303,13 @@ export class LineCharts {
           .on("start brush end", function(d) {
             var s = d3.event.selection;
             if (s == null) {
-              self.resolve_brushing(dim, false)
-              self.brush_active.set(dim, false)
+              self.brush_active.delete(dim)
+              self.resolve_brushing()
             } else {
               var sy = s.map(self.y.get(dim).invert);
-              self.resolve_brushing(dim, true, sy)
-              self.brush_active.set(dim, true);
+              self.brush_active.set(dim, sy)
+              self.resolve_brushing()
+
             }
           });
 
@@ -338,10 +351,9 @@ export class LineCharts {
           .attr("x", -this.focus_height/2)
           .text("Reset Brush")
           .on("click", x => {
-            self.charts.get(dim).focus.selectAll("path.focusline").remove()
-            self.resolve_brushing(dim, false)
-            self.brush_active.set(dim, false)
             gBrush.call(brush.move, null)
+            self.brush_active.delete(dim)
+            self.resolve_brushing()
           })
 
         // add the x Axis
@@ -426,7 +438,7 @@ export class LineCharts {
 
     let focus_data = <any>[];
     this.data.forEach((d: any[]) => {
-      focus_data.push(d["data"][this.time_scale(this.selected_time)][dim])
+      focus_data.push(d["data"][Math.round(this.time_scale(this.selected_time.get(dim)))][dim])
     })
 
     this.bins = d3.histogram()
@@ -475,103 +487,42 @@ export class LineCharts {
       })
       .moveToBack();
 
-    if(this.brush_active.get(dim)) {
-      this.resolve_brushing(dim, true);
-      this.updateHighlight(dim)
-    }
+    this.resolve_brushing();
   }
 
   updateHighlight(dim) {
     let self = this;
-    if(this.mode == "Opacity") {
-      // this.charts.get(dim).linechart.selectAll("path.line")
-      //   .attr("opacity", function(d) {
-      //     return d["highlight"]
-      //   })
-      //
-      // this.charts.get(dim).focus.selectAll("rect.bar")
-      //   .attr("opacity", function(b) {
-      //     let opacity = 0;
-      //     let counter = 0;
-      //
-      //     self.data.forEach((d: any[]) => {
-      //       let value = d["data"][self.selected_time][dim];
-      //
-      //       if(value >= b.x0 && value <= b.x1) {
-      //         counter++;
-      //         opacity += d["highlight"]
-      //       }
-      //     })
-      //
-      //     if(b.length < 1) return 0;
-      //
-      //     return opacity / counter
-      //   })
-    }
-    if(this.mode = "Opacity + Viridis") {
-      // let chart = this.charts.get(dim).linechart.selectAll("path.line")
-      //   .data(this.data.filter( x => {
-      //     return x.highlight > 0;
-      //   }).sort(function(a, b) {
-      //     return d3.ascending(a.highlight, b.highlight)
-      //   }))
 
-      // console.time("draw")
-      // chart.enter()
-      //   .append("path")
-      //   .attr("class", "line")
-      //   .merge(chart)
-      //   .style("stroke", function(d) { return d.color })
-      //   .attr("d", (d) => this.valueline.get(dim)(d["data"]));
-      //
-      // chart.exit().remove();
+    this.charts.get(dim).container.children.forEach(x => {
+      let color = this.id_color.get(this.line_id.get(dim).get(x))
 
-      this.charts.get(dim).linechart.selectAll("path.line")
-        .sort(function(a, b) {
-          return d3.ascending(a.highlight, b.highlight)
-        })
-        .attr("opacity", function(d) {
-          if(d["highlight"] == 0) return 0.25
-          else 1
-        })
-        .style("stroke", function(d) {
-          if(d["highlight"] == 0) return "#d3d3d3"
-          else return d["color"]
-        })
-    }
-    if(this.mode = "Opacity + Viridis") {
-      this.charts.get(dim).container.children.forEach(x => {
-        let color = this.id_color.get(this.line_id.get(dim).get(x))
+      if(color == "none") {
+        x.alpha = 0;
+      }
+      else {
+        x.alpha = 1;
+        x.tint = parseInt(color.substring(1), 16);
+      }
+    })
 
-        if(color == "none") {
-          x.alpha = 0;
-          // x.tint = parseInt("d3d3d3", 16);
-        }
-        else {
-          x.alpha = 1;
-          x.tint = parseInt(color.substring(1), 16);
-        }
+    this.charts.get(dim).focus.selectAll("rect.bar")
+      .style("fill", function(b) {
+        let opacity = 0;
+        let counter = 0;
+
+        self.data.forEach((d: any[]) => {
+          let value = d["data"][Math.round(self.time_scale(self.selected_time.get(dim)))][dim];
+
+          if(value >= b.x0 && value <= b.x1) {
+            counter++;
+            opacity += d["highlight"]
+          }
+        })
+
+        if(opacity <= 0) return "#d3d3d3";
+
+        return self.quantize(opacity / counter)
       })
-
-      this.charts.get(dim).focus.selectAll("rect.bar")
-        .style("fill", function(b) {
-          let opacity = 0;
-          let counter = 0;
-
-          self.data.forEach((d: any[]) => {
-            let value = d["data"][self.time_scale(self.selected_time)][dim];
-
-            if(value >= b.x0 && value <= b.x1) {
-              counter++;
-              opacity += d["highlight"]
-            }
-          })
-
-          if(opacity <= 0) return "#d3d3d3";
-
-          return self.quantize(opacity / counter)
-        })
-    }
   }
 
   updateChart() {
@@ -593,11 +544,11 @@ export class LineCharts {
       let y_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[dim]))
       let y_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[dim]))
 
-      this.selected_time = x_max;
+      this.selected_time.set(dim, x_max);
 
       let focus_data = <any>[];
       this.data.forEach((d: any[]) => {
-        focus_data.push(d["data"][this.time_scale(this.selected_time)][dim])
+        focus_data.push(d["data"][Math.round(this.time_scale(this.selected_time.get(dim)))][dim])
       })
 
       this.y.get(dim).domain([y_min, y_max]);
