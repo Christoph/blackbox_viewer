@@ -14,9 +14,11 @@ export class Gauss {
   data_not_loaded = true;
   modes = ["Opacity + Viridis", "Opacity", "Color-Plasma", "Color-Viridis"];
   input_modes = ["Parallel-Charts", "SPLOM"]
+  brushing_modes = ["binary", "linear", "focus"]
   selected_input_mode = "Parallel-Charts";
   splom_selected = false;
   selected_mode = "Opacity + Viridis";
+  selected_brushing_mode = "linear"
   no_filter = true;
   no_selection = true;
   filter = new Set();
@@ -120,6 +122,12 @@ export class Gauss {
     this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
   }
 
+  selectBrush(mode) {
+    this.selected_brushing_mode = mode;
+
+    if(this.brushing_lines) this.updateData()
+  }
+
   selectInputMode(mode) {
     this.selected_input_mode = mode;
 
@@ -205,19 +213,31 @@ export class Gauss {
 
     this.brushing_lines.forEach((d, dim) => {
       if(d.active) {
-        // // Focus brushing
-        // this.outFilter.set(dim, {
-        //   timestep: d.timestep,
-        //   scale: d3.scaleLinear()
-        //     .domain([d.extent[0], d.extent[1]+((d.extent[0]-d.extent[1])/2), d.extent[1]])
-        //     .range([0.1, 1.1, 0.1])
-        // })
-
-        // Binary brushing
-        this.outFilter.set(dim, {
-          timestep: d.timestep,
-          extent: d.extent
-        })
+        if(this.selected_brushing_mode == "focus") {
+          // Focus brushing
+          this.outFilter.set(dim, {
+            timestep: d.timestep,
+            scale: d3.scaleLinear()
+              .domain([d.extent[0], d.extent[1]+((d.extent[0]-d.extent[1])/2), d.extent[1]])
+              .range([0.1, 1.1, 0.1])
+          })
+        }
+        else if(this.selected_brushing_mode == "linear") {
+          // Linear brushing
+          this.outFilter.set(dim, {
+            timestep: d.timestep,
+            scale: d3.scaleLinear()
+              .domain([d.extent[0],  d.extent[1]])
+              .range([0.1, 1.1])
+          })
+        }
+        else if(this.selected_brushing_mode == "binary") {
+          // Binary brushing
+          this.outFilter.set(dim, {
+            timestep: d.timestep,
+            extent: d.extent
+          })
+        }
 
         this.no_selection = false;
       }
@@ -234,48 +254,69 @@ export class Gauss {
         let counter = 0;
 
         if(this.outFilter.size > 0) {
-          // // Focus brushing
-          // this.outFilter.forEach((data, dim) => {
-          //   let t = Math.round(this.time_scale(data.timestep))
-          //   if(x.data[t][dim] >= data.scale.domain()[2] && x.data[t][dim] <= data.scale.domain()[0]) {
-          //     highlight += data.scale(x.data[t][dim]);
-          //     counter++;
-          //   }
-          // })
-          //
-          // if(highlight <= 0 || counter < this.outFilter.size) {
-          //   x.highlight = 0;
-          //   x.color = "none"
-          // }
-          // else {
-          //   selected_lines++;
-          //
-          //   x.highlight = this.quantize(highlight/counter);
-          //   x.color = this.color_viridis(x.highlight);
-          // }
+          if(this.selected_brushing_mode == "focus") {
+            // Focus brushing
+            this.outFilter.forEach((data, dim) => {
+              let t = Math.round(this.time_scale(data.timestep))
+              if(x.data[t][dim] >= data.scale.domain()[2] && x.data[t][dim] <= data.scale.domain()[0]) {
+                highlight += data.scale(x.data[t][dim]);
+                counter++;
+              }
+            })
 
-          // Binary brushing
-          this.outFilter.forEach((data, dim) => {
-            let t = Math.round(this.time_scale(data.timestep))
-            if(x.data[t][dim] >= data.extent[1] && x.data[t][dim] <= data.extent[0]) {
-              highlight = 1;
-              counter++;
+            if(highlight <= 0 || counter < this.outFilter.size) {
+              x.highlight = 0;
+              x.color = "none"
             }
-          })
+            else {
+              selected_lines++;
 
-          if(highlight <= 0 || counter < this.outFilter.size) {
-            x.highlight = 0;
-            x.color = "none"
+              x.highlight = this.quantize(highlight/counter);
+              x.color = this.color_viridis(x.highlight);
+            }
           }
-          else {
-            selected_lines++;
+          else if(this.selected_brushing_mode == "linear") {
+            // Linear brushing
+            this.outFilter.forEach((data, dim) => {
+              let t = Math.round(this.time_scale(data.timestep))
+              if(x.data[t][dim] >= data.scale.domain()[1] && x.data[t][dim] <= data.scale.domain()[0]) {
+                highlight += data.scale(x.data[t][dim]);
+                counter++;
+              }
+            })
 
-            x.highlight = highlight;
-            x.color = this.color_viridis(x.highlight);
+            if(highlight <= 0 || counter < this.outFilter.size) {
+              x.highlight = 0;
+              x.color = "none"
+            }
+            else {
+              selected_lines++;
+
+              x.highlight = this.quantize(highlight/counter);
+              x.color = this.color_viridis(x.highlight);
+            }
           }
+          else if(this.selected_brushing_mode == "binary") {
+            // Binary brushing
+            this.outFilter.forEach((data, dim) => {
+              let t = Math.round(this.time_scale(data.timestep))
+              if(x.data[t][dim] >= data.extent[1] && x.data[t][dim] <= data.extent[0]) {
+                highlight = 1;
+                counter++;
+              }
+            })
 
-          // Linear brushing
+            if(highlight <= 0 || counter < this.outFilter.size) {
+              x.highlight = 0;
+              x.color = "none"
+            }
+            else {
+              selected_lines++;
 
+              x.highlight = highlight;
+              x.color = this.color_viridis(x.highlight);
+            }
+          }
         }
         else {
           x.highlight = 0;

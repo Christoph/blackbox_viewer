@@ -100,6 +100,17 @@
             </div>
             <div class="col-md-6">
               <div class="btn-group" style="float: right;">
+                <div  class="btn-group dropdown" aubs-dropdown="auto-close: 'Always'; on-toggle.call: toggled(state)">
+                  <button disabled.bind="data_not_loaded" class="btn btn-default dropdown-toggle" aubs-dropdown-toggle>
+                      <strong>Brushing Mode:</strong> ${selected_brushing_mode}
+                      <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-left">
+                      <li repeat.for="brush of brushing_modes">
+                        <a click.delegate="selectBrush(brush)">${brush}</a>
+                      </li>
+                  </ul>
+                </div>
                 <button disabled.bind="no_selection" click.delegate="removeSelection()" type="button" class="btn btn-danger">Remove Selection</button>
                 <button disabled.bind="no_filter" click.delegate="resetSelection()" type="button" class="btn btn-warning">Reset Selection</button>
               </div>
