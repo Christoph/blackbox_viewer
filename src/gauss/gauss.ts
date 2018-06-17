@@ -232,7 +232,8 @@ export class Gauss {
             }
           })
 
-          if(highlight <= 0) {
+
+          if(highlight <= 0 || counter < this.outFilter.size) {
             x.highlight = 0;
             x.color = "none"
           }
