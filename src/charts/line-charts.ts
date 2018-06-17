@@ -133,32 +133,10 @@ export class LineCharts {
     this.subscription.dispose();
   }
 
-  getLine(dim) {
-    let data = [];
-
-    // Upper start point
-    data.push([0, 0])
-
-    // Upper brush start
-    data.push([0, this.y.get(dim)(Math.max(this.y.get(dim).domain()[0], this.center - this.weight))])
-
-    // middle point
-    data.push([this.focus_x.get(dim).range()[1], this.y.get(dim)(this.center)])
-
-    // Lower brush end
-    data.push([0, this.y.get(dim)(Math.min(this.y.get(dim).domain()[1], this.center + this.weight))])
-
-    // Lower end point
-    data.push([0, this.focus_height])
-
-    return data
-  }
-
-  resolve_brushing(dim, active) {
+  resolve_brushing(dim, active, extent=[0, 0]) {
     this.brushing = {
       active: active,
-      center: this.center,
-      radius: this.weight,
+      extent: extent,
       dim: dim,
       timestep: this.selected_time
     }
@@ -238,17 +216,6 @@ export class LineCharts {
     let margin_iterator = 0;
     this.dimensions.map((dim) => {
       let brushing = false;
-      function updateBrushing(d) {
-        if(brushing && d3.event) {
-          self.center = self.y.get(dim).invert(d3.mouse(this)[1]);
-          self.weight = self.x_weight.get(dim)(d3.mouse(this)[0]);
-
-          self.weight_to_highlight.domain([0, self.weight])
-
-          self.updateBrush(dim);
-          self.resolve_brushing(dim, true);
-        }
-      }
 
       // Linechart area
       let linechart = this.svg
@@ -262,34 +229,6 @@ export class LineCharts {
         .append("g")
         .attr("transform",
         "translate(" + this.focus_offset + ", " + (this.margin.top + (this.focus_height + this.margin.y) * margin_iterator) + ")")
-
-      focus
-        .append("rect")
-        .attr("width", this.focus_width)
-        .attr("height", this.focus_height)
-        .style("opacity", 0)
-        .on("mousedown", function(d) {
-          self.center = self.y.get(dim).invert(d3.mouse(this)[1]);
-          self.weight = self.x_weight.get(dim)(d3.mouse(this)[0]);
-
-          self.weight_to_highlight.domain([0, self.weight])
-
-          self.createBrush(dim);
-          self.updateBrush(dim);
-          self.resolve_brushing(dim, true);
-
-          self.brush_active.set(dim, true);
-          brushing = true;
-        })
-        .on("mousemove", _.throttle(updateBrushing, 50))
-        // .on("mousemove", updateBrushing)
-        .on("mouseup", function(d) {
-          brushing = false;
-        })
-        .on("mouseleave", function(d) {
-          brushing = false;
-        })
-        // .moveToFront()
 
         // add the x Axis
         linechart.append("g")
@@ -347,6 +286,25 @@ export class LineCharts {
             d3.select(this).classed('active',false);
           });
 
+        let brush = d3.brushY()
+          .extent([[0, 0], [this.focus_width, this.focus_height]])
+          .on("start brush end", function(d) {
+            var s = d3.event.selection;
+            if (s == null) {
+              self.resolve_brushing(dim, false)
+              self.brush_active.set(dim, false)
+            } else {
+              var sy = s.map(self.y.get(dim).invert);
+              self.resolve_brushing(dim, true, sy)
+              self.brush_active.set(dim, true);
+            }
+          });
+
+        let gBrush = focus
+          .append("g")
+          .attr("class", "brush")
+          .call(brush)
+
         // Add time selection line
         let selector = linechart
           .append("g")
@@ -382,7 +340,8 @@ export class LineCharts {
           .on("click", x => {
             self.charts.get(dim).focus.selectAll("path.focusline").remove()
             self.resolve_brushing(dim, false)
-            self.brush_active.set(dim, false);
+            self.brush_active.set(dim, false)
+            gBrush.call(brush.move, null)
           })
 
         // add the x Axis
@@ -557,7 +516,7 @@ export class LineCharts {
       //     return d3.ascending(a.highlight, b.highlight)
       //   }))
 
-      console.time("draw")
+      // console.time("draw")
       // chart.enter()
       //   .append("path")
       //   .attr("class", "line")
@@ -613,32 +572,6 @@ export class LineCharts {
           return self.quantize(opacity / counter)
         })
     }
-  }
-
-  createBrush(dim) {
-    let line_data = this.getLine(dim);
-
-    this.charts.get(dim).focus.selectAll("path.focusline").remove();
-    let focus_line = this.charts.get(dim).focus.selectAll("path.focusline")
-      .data([line_data])
-
-    // Distribution line
-    focus_line.enter()
-      .append("path")
-      .attr("class", "focusline")
-      .attr("fill", "none")
-      .attr("d", this.lineGenerator)
-      .moveToFront();
-  }
-
-  updateBrush(dim) {
-    let line_data = this.getLine(dim);
-
-    // Distribution line
-    this.charts.get(dim).focus.selectAll("path.focusline")
-      .data([line_data])
-      .attr("d", this.lineGenerator)
-      .moveToFront();
   }
 
   updateChart() {
