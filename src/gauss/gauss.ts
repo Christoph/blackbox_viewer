@@ -205,11 +205,18 @@ export class Gauss {
 
     this.brushing_lines.forEach((d, dim) => {
       if(d.active) {
+        // // Focus brushing
+        // this.outFilter.set(dim, {
+        //   timestep: d.timestep,
+        //   scale: d3.scaleLinear()
+        //     .domain([d.extent[0], d.extent[1]+((d.extent[0]-d.extent[1])/2), d.extent[1]])
+        //     .range([0.1, 1.1, 0.1])
+        // })
+
+        // Binary brushing
         this.outFilter.set(dim, {
           timestep: d.timestep,
-          scale: d3.scaleLinear()
-            .domain([d.extent[0], d.extent[1]+((d.extent[0]-d.extent[1])/2), d.extent[1]])
-            .range([0.1, 1.1, 0.1])
+          extent: d.extent
         })
 
         this.no_selection = false;
@@ -227,14 +234,34 @@ export class Gauss {
         let counter = 0;
 
         if(this.outFilter.size > 0) {
+          // // Focus brushing
+          // this.outFilter.forEach((data, dim) => {
+          //   let t = Math.round(this.time_scale(data.timestep))
+          //   if(x.data[t][dim] >= data.scale.domain()[2] && x.data[t][dim] <= data.scale.domain()[0]) {
+          //     highlight += data.scale(x.data[t][dim]);
+          //     counter++;
+          //   }
+          // })
+          //
+          // if(highlight <= 0 || counter < this.outFilter.size) {
+          //   x.highlight = 0;
+          //   x.color = "none"
+          // }
+          // else {
+          //   selected_lines++;
+          //
+          //   x.highlight = this.quantize(highlight/counter);
+          //   x.color = this.color_viridis(x.highlight);
+          // }
+
+          // Binary brushing
           this.outFilter.forEach((data, dim) => {
             let t = Math.round(this.time_scale(data.timestep))
-            if(x.data[t][dim] >= data.scale.domain()[2] && x.data[t][dim] <= data.scale.domain()[0]) {
-              highlight += data.scale(x.data[t][dim]);
+            if(x.data[t][dim] >= data.extent[1] && x.data[t][dim] <= data.extent[0]) {
+              highlight = 1;
               counter++;
             }
           })
-
 
           if(highlight <= 0 || counter < this.outFilter.size) {
             x.highlight = 0;
@@ -243,9 +270,12 @@ export class Gauss {
           else {
             selected_lines++;
 
-            x.highlight = this.quantize(highlight/counter);
+            x.highlight = highlight;
             x.color = this.color_viridis(x.highlight);
           }
+
+          // Linear brushing
+
         }
         else {
           x.highlight = 0;
