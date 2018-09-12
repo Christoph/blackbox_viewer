@@ -37,6 +37,15 @@
                                                         on-toggle.call:toggled(open)">
                 <i class="fas fa-database fa-lg"></i>
             </button>
+            <button click.delegate="loadInlier()" style="height: 54px" class="btn btn-default">
+                Inlier Data
+            </button>
+            <button click.delegate="loadCorrelation()" style="height: 54px" class="btn btn-default">
+                Correlation Data
+            </button>
+            <button click.delegate="loadSensitivity()" style="height: 54px" class="btn btn-default">
+                Sensitivity Data
+            </button>
           </div>
           <br>
           <div  class="btn-group dropdown" aubs-dropdown="auto-close: 'Always'; on-toggle.call: toggled(state)">

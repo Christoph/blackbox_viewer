@@ -1,6 +1,9 @@
 import { autoinject, observable } from 'aurelia-framework';
 import * as d3 from "d3"
 import {exampleData} from "../resources/example-data"
+import {inlierData} from "../resources/inlier-data"
+import {correlationData} from "../resources/correlation-data"
+import {sensitivityData} from "../resources/sensitivity-data"
 
 @autoinject
 export class Gauss {
@@ -88,6 +91,21 @@ export class Gauss {
     this.data = exampleData.getExampleData()
     this.load()
     this.visualize()
+  }
+
+  loadInlier = () => {
+    this.data = inlierData.getExampleData()
+    this.load()
+  }
+
+  loadCorrelation = () => {
+    this.data = correlationData.getExampleData()
+    this.load()
+  }
+
+  loadSensitivity = () => {
+    this.data = sensitivityData.getExampleData()
+    this.load()
   }
 
   restart = () => {
